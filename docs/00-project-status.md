@@ -36,7 +36,7 @@
 
 | 事实面 | 状态 | 证据/下一步 |
 |---|---|---|
-| 代码 | changed-and-verified | 后端 262 tests、91.21% 总覆盖率、纯规则模块 100%；前端 9 tests、被测模块 100% 覆盖率并完成 production build |
+| 代码 | changed-and-verified | 后端 276 tests、91.19% 总覆盖率、纯规则模块 100%；前端 9 tests、被测模块 100% 覆盖率并完成 production build |
 | 运行态 | not-applicable | 尚未部署，不写“可用” |
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |

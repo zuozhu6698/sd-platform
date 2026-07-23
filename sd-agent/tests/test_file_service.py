@@ -37,6 +37,9 @@ class FakeStore:
     async def get(self, storage_key: str) -> bytes:
         return self.objects[storage_key]
 
+    async def delete(self, storage_key: str) -> None:
+        self.objects.pop(storage_key, None)
+
 
 class FakeRepository:
     def __init__(self) -> None:
@@ -216,6 +219,25 @@ async def test_scan_failure_fails_closed_before_storage() -> None:
             now=NOW,
         )
     assert not store.objects and not repository.items
+
+
+async def test_repository_failure_removes_orphaned_object() -> None:
+    files, store, repository = service()
+
+    async def fail(_metadata: FileMetadata) -> None:
+        raise RuntimeError("database offline")
+
+    repository.save = fail  # type: ignore[method-assign]
+    with pytest.raises(RuntimeError, match="database offline"):
+        await files.upload(
+            owner_person_id=7,
+            task_id=None,
+            original_name="safe.pdf",
+            declared_media_type="application/pdf",
+            data=b"%PDF-safe",
+            now=NOW,
+        )
+    assert not store.objects
 
 
 async def test_download_enforces_owner_or_supervision_admin() -> None:

@@ -48,6 +48,8 @@ class Settings(BaseSettings):
 
     FILE_SCAN_MODE: str = "disabled"
     FILE_SCAN_BASE_URL: str = ""
+    FILE_STORAGE_ROOT: str = ""
+    FILE_MAX_MB: int = Field(default=20, ge=1, le=100)
     CRON_ENABLED: bool = False
 
     @field_validator("ALLOWED_REDIRECT_PATHS", mode="before")
@@ -105,4 +107,6 @@ class Settings(BaseSettings):
             raise ValueError("生产环境必须启用 COOKIE_SECURE")
         if self.FILE_SCAN_MODE != "required" or not self.FILE_SCAN_BASE_URL:
             raise ValueError("生产环境必须配置同步文件扫描服务")
+        if not self.FILE_STORAGE_ROOT.startswith("/"):
+            raise ValueError("生产环境必须配置绝对文件存储目录")
         return self

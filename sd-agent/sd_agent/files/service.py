@@ -66,6 +66,8 @@ class ObjectStore(Protocol):
 
     async def get(self, storage_key: str) -> bytes: ...
 
+    async def delete(self, storage_key: str) -> None: ...
+
 
 class FileRepository(Protocol):
     async def save(self, metadata: FileMetadata) -> None: ...
@@ -134,7 +136,11 @@ class FileService:
             created_at=current_time,
             scanned_at=current_time,
         )
-        await self._repository.save(metadata)
+        try:
+            await self._repository.save(metadata)
+        except Exception:
+            await self._store.delete(stored.storage_key)
+            raise
         if not verdict.clean:
             raise FileServiceError("FILE_REJECTED", "附件未通过安全扫描", 422)
         return metadata

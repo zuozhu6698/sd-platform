@@ -30,6 +30,7 @@ def production_settings(**overrides: object) -> dict[str, object]:
         "COOKIE_SECURE": True,
         "FILE_SCAN_MODE": "required",
         "FILE_SCAN_BASE_URL": "https://scanner.example.test",
+        "FILE_STORAGE_ROOT": "/var/lib/sd-platform/files",
     }
     values.update(overrides)
     return values
@@ -46,6 +47,7 @@ def test_production_rejects_missing_secrets() -> None:
         ("AUTH_DEV_LOGIN", True, "生产环境禁止 AUTH_DEV_LOGIN"),
         ("COOKIE_SECURE", False, "生产环境必须启用 COOKIE_SECURE"),
         ("FILE_SCAN_MODE", "disabled", "生产环境必须配置同步文件扫描服务"),
+        ("FILE_STORAGE_ROOT", "relative", "生产环境必须配置绝对文件存储目录"),
     ],
 )
 def test_production_security_invariants(field: str, value: object, message: str) -> None:
