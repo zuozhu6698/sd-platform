@@ -5,7 +5,7 @@
 ## 当前状态
 
 - 工程文档：已完成 2026-07-23 架构/数据/安全/交付终审基线。
-- Git：已建立独立本地仓库和 `codex/g0-engineering-baseline` 分支；origin 已配置为 `zuozhu6698/sd-platform` 个人私有仓库，当前无 GitHub Pro。
+- Git：已建立独立本地仓库和 `codex/g0-engineering-baseline` 分支；origin 已配置为 `zuozhu6698/sd-platform` 个人 public 仓库，可使用 GitHub Free 的 public 仓库分支保护。
 - 运行态：未部署。应用服务器已确认，GPU 服务、域名、证书、OA 测试账号和内网制品库仍待确认。
 - 工程门禁：后端 Ruff/format/Mypy/246 tests（总覆盖率 90.95%，纯规则模块 100%）通过；前端 lint/typecheck/9 tests/build（被测模块四项覆盖率 100%）通过；文档链接与 secret shape 检查通过。
 - 核心底座：JWT/CSRF/重定向防护、PostgreSQL session 撤销、动态角色范围、`/api/me`、`/api/logout`、`/api/home/summary` 本人任务、纯规则引擎、Teable 九表字段白名单与安全重试适配器、`/api/report/submit` 幂等 saga、附件扫描状态约束和 durable outbox 核心已实现；OA start/callback、OA 分发、文件上传/扫描与真实 Teable/OA 联调仍以 POC 为准。
@@ -28,7 +28,7 @@
       → 洁癖收尾 → PR → CI → squash merge main → 制品 → 部署 → 验收
 ```
 
-没有 GitHub Pro 时，私有仓库无法强制保护 `main`。仍必须走 PR；本地 pre-push hook 和 AGENTS 规则只是补偿控制，不等同于平台强制保护。
+仓库为 public，首次引导 `main` 和 CI 后必须启用 required pull request 与 required status checks；本地 pre-push hook 和 AGENTS 规则继续作为防误操作控制。
 
 ## 关键决策
 

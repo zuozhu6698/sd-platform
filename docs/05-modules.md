@@ -8,7 +8,7 @@
 
 - 创建独立 Git 仓库、README、ignore/attributes、`codex/*` 分支流程、本地 main pre-push guard。
 - 建立后端/frontend/compose/docs CI 占位与 secret scan；锁 GitHub Actions SHA。
-- 验收：私有 remote 正确；无真实 secret；空工程 CI 可重复通过；main 无直接提交。
+- 验收：public remote 正确；无真实 secret；空工程 CI 可重复通过；main 启用保护且无直接提交。
 
 ### G1 文档与决策门禁
 

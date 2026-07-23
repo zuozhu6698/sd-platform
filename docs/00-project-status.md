@@ -9,8 +9,8 @@
 |---|---|---|
 | GitHub owner/remote | `zuozhu6698` / `https://github.com/zuozhu6698/sd-platform.git` | verified-current |
 | 提交显示名 | `zuozhu6698` | verified-current |
-| 仓库 | 个人私有仓库，计划名 `sd-platform` | verified-current |
-| GitHub 方案 | 无 Pro，私有 main 暂不能强制保护 | verified-current |
+| 仓库 | 个人 public 仓库 `zuozhu6698/sd-platform` | verified-current |
+| GitHub 方案 | GitHub Free public 仓库；首次引导后启用 main 保护与 required checks | changed-not-yet-verified |
 | 应用服务器 | 已有 APP-SRV，承载 Nginx/Teable/PostgreSQL/Redis/API/worker | verified-current |
 | GPU | 应用机不承担 32B 推理；GPU-SRV/统一模型接口尚未提供 | pending |
 | 原始资料 | 上级 DOCX/HTML 作为背景与原型证据保留 | verified-current |

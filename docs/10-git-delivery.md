@@ -3,8 +3,8 @@
 ## 1. 仓库事实
 
 - GitHub owner：`zuozhu6698`。
-- 目标：个人私有仓库 `zuozhu6698/sd-platform`。
-- 当前无 GitHub Pro，私有仓库不能强制启用 protected branch。PR/CI 仍执行，但平台无法阻止 owner 直推/强行合并。
+- 目标：个人 public 仓库 `zuozhu6698/sd-platform`。
+- GitHub Free public 仓库支持 protected branch；首次引导完成后必须启用 required pull request、required status checks 和禁止删除/force push。
 - 提交显示名：`zuozhu6698`。提交邮箱在第一次 commit 前选择直接邮箱或 GitHub noreply；不要在仓库文件里硬编码个人邮箱。
 
 ## 2. 首次建仓步骤
@@ -24,7 +24,7 @@ git diff --cached
 git commit -m "chore(G0): 建立工程与文档基线"
 
 gh auth login
-gh repo create zuozhu6698/sd-platform --private --source . --remote origin
+gh repo create zuozhu6698/sd-platform --public --source . --remote origin
 $env:SD_ALLOW_INITIAL_MAIN_PUSH = "initial-bootstrap"
 git push -u origin main
 Remove-Item Env:SD_ALLOW_INITIAL_MAIN_PUSH
@@ -48,17 +48,17 @@ docs(G1): 同步 SSO 重定向契约
 fix(F2): 修复 H5 重复提交提示
 ```
 
-## 4. 无 Pro 阶段补偿控制
+## 4. public 仓库强制控制
 
 1. 提供版本化 `.githooks/pre-push`，默认拒绝从 main 直接 push；G0 设置 `core.hooksPath`。
 2. README/AGENTS 明文禁止直推；每次任务从 `codex/*` 分支开始。
 3. PR 模板要求任务卡、风险、测试命令/结果、文档影响、截图/trace、回滚。
-4. GitHub Actions 全绿后才人工 squash merge。
+4. 将唯一 job 名 `docs/backend/frontend/images` 配置为 required checks，GitHub Actions 全绿后才允许 squash merge。
 5. 每周审计 main 是否存在非 PR commit；发现一次即记录并补流程。
 
-本地 hook 可被绕过，只是防误操作。仓库进入生产或多人协作前，升级 GitHub Pro 或迁入具备规则保护的组织仓库。
+本地 hook 可被绕过，只是防误操作，不能替代 GitHub branch protection。
 
-平台能力依据：[GitHub protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)。建仓时再次核对账号当日套餐能力；若 GitHub 已为该私有仓库开放等效 ruleset，应优先启用平台强制规则。
+平台能力依据：[GitHub protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)。规则启用后必须通过 API 或设置页截图复核。
 
 ## 5. CI 必需 job
 

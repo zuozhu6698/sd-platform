@@ -49,7 +49,7 @@ sd-platform/
 3. 只提交任务卡范围内文件。若必须扩展范围，在 PR 写明理由和新增验收项。
 4. 运行 `docs/09-testing.md` 对应门禁，粘贴命令与结果；未运行写“未运行”，禁止写“应该通过”。
 5. 运行洁癖收尾，对齐 README、AGENTS、docs、代码和当前状态，再创建 PR。
-6. CI 全绿后 squash merge。无 GitHub Pro 阶段，main 保护靠本地 hook 和流程约定，任何人/Agent 都禁止直推 main。
+6. CI 全绿后 squash merge。public 仓库必须启用 GitHub branch protection；任何人/Agent 都禁止绕过规则直推 main。
 
 ## 5. 架构铁律
 
@@ -75,4 +75,3 @@ sd-platform/
 - 移动原生 App；一期只做 OA/M3 内嵌 H5。
 - Kubernetes、多节点微服务拆分、消息中间件集群。单应用机阶段使用 Compose + PostgreSQL durable outbox。
 - 在生产机 `git pull` 后现场构建。生产只接收 CI 生成并按 commit SHA/digest 标识的制品。
-

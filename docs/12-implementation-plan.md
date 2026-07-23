@@ -26,7 +26,7 @@ AI、复杂地图、BI 驾驶舱在最小闭环稳定后接入。
 
 | 阶段 | 任务卡 | 交付物 | 退出条件 |
 |---|---|---|---|
-| M0 基线 | G0/G1/B0/F0 | 私有 repo、CI、空工程、锁文件、文档门禁 | Gate 1 |
+| M0 基线 | G0/G1/B0/F0 | public repo、受保护 main、CI、空工程、锁文件、文档门禁 | Gate 1 |
 | M1 POC/底座 | P0/P1/P2/O0/B1/B2 | 3 份 POC、9 领域表、sd_app/bi 迁移、资产网络报告 | Gate 2 |
 | M2 最小闭环 | B3/B4/B5/B6/B7/F1/F2/J0 | SSO/填报/催办/OA/审计 | Gate 3 |
 | M3 AI/报告 | B8/B9/F3/J1 | AI 审读、人工追问、报告签发/溯源 | eval 达标 |
@@ -77,7 +77,7 @@ AI、复杂地图、BI 驾驶舱在最小闭环稳定后接入。
 | OA 接口幂等/SSO差异 | P1 | adapter + 人工消息降级；阻塞 M2 |
 | GPU/32B 不可用 | P2 | 集团模型服务或 8B TEST 替身；AI 不阻塞 J0 |
 | APP-SRV 资源不足 | O0/TEST load | 扩容/拆 GPU；不牺牲备份和安全 |
-| 无 Pro 误推 main | hook+审计 | 升级 Pro/组织仓库 |
+| branch protection 被误关 | hook+审计+定期 API 核验 | 立即恢复规则并审计直推记录 |
 
 ## 8. 估算方式
 
