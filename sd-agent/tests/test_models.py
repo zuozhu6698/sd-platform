@@ -9,6 +9,7 @@ def test_application_schema_contains_all_contract_tables() -> None:
         ("sd_app", "auth_session"),
         ("sd_app", "submission_command"),
         ("sd_app", "webhook_receipt"),
+        ("sd_app", "file_object"),
         ("sd_app", "audit_event"),
         ("sd_app", "job_run"),
         ("sd_app", "outbox_message"),

@@ -95,6 +95,63 @@ async def test_create_record_uses_whitelist_and_idempotency_header() -> None:
     assert json.loads(observed.content)["records"][0]["fields"]["task_id"] == 9
 
 
+async def test_update_record_uses_patch_and_strict_body() -> None:
+    observed: httpx.Request | None = None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal observed
+        observed = request
+        return httpx.Response(
+            200,
+            json={"id": "rec_task", "fields": {"progress": 70, "revision": 8}},
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+        record = await client(http).update_record(
+            "task",
+            record_id="rec_task",
+            fields={"progress": 70, "revision": 8},
+            idempotency_key="idem_patch",
+        )
+
+    assert record.fields["revision"] == 8
+    assert observed is not None and observed.method == "PATCH"
+    assert observed.url.path.endswith("/record/rec_task")
+    assert observed.headers["Idempotency-Key"] == "idem_patch"
+    assert json.loads(observed.content) == {
+        "fieldKeyType": "name",
+        "typecast": False,
+        "record": {"fields": {"progress": 70, "revision": 8}},
+    }
+
+
+@pytest.mark.parametrize("record_id", ["", "../record"])
+async def test_update_rejects_unsafe_record_id(
+    http_client: httpx.AsyncClient,
+    record_id: str,
+) -> None:
+    with pytest.raises(ValueError, match="record id"):
+        await client(http_client).update_record(
+            "task",
+            record_id=record_id,
+            fields={"progress": 1},
+            idempotency_key="key",
+        )
+
+
+async def test_update_rejects_invalid_response() -> None:
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, json={}))
+    ) as http:
+        with pytest.raises(TeableAdapterError, match="TEABLE_INVALID_RESPONSE"):
+            await client(http).update_record(
+                "task",
+                record_id="rec_task",
+                fields={"progress": 1},
+                idempotency_key="key",
+            )
+
+
 @pytest.mark.parametrize(
     ("table", "projection", "take", "skip"),
     [

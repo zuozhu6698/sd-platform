@@ -6,6 +6,9 @@ from pathlib import Path
 MIGRATION = (
     Path(__file__).parents[1] / "migrations" / "versions" / "20260723_0001_sd_app_baseline.py"
 )
+FILE_MIGRATION = (
+    Path(__file__).parents[1] / "migrations" / "versions" / "20260723_0002_file_object.py"
+)
 
 
 def test_baseline_migration_is_explicit_and_immutable() -> None:
@@ -45,3 +48,12 @@ def test_downgrade_drops_child_before_parent() -> None:
     assert source.index('op.drop_table("outbox_attempt"') < source.index(
         'op.drop_table("outbox_message"'
     )
+
+
+def test_file_migration_is_explicit_and_reversible() -> None:
+    source = FILE_MIGRATION.read_text(encoding="utf-8")
+    assert "Base.metadata" not in source
+    assert 'revision: str = "20260723_0002"' in source
+    assert 'down_revision: str | None = "20260723_0001"' in source
+    assert 'op.create_table(\n        "file_object"' in source
+    assert 'op.drop_table("file_object", schema="sd_app")' in source

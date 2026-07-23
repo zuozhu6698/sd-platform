@@ -76,6 +76,30 @@ class WebhookReceipt(Base):
     state: Mapped[str] = mapped_column(String(32), nullable=False)
 
 
+class FileObject(Base):
+    __tablename__ = "file_object"
+    __table_args__ = (
+        UniqueConstraint("storage_key", name="uq_file_object_storage_key"),
+        Index("ix_file_object_owner_state", "owner_person_id", "state"),
+        Index("ix_file_object_task", "task_id", "bound_at"),
+        {"schema": "sd_app"},
+    )
+
+    file_id: Mapped[str] = mapped_column(String(160), primary_key=True)
+    owner_person_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    task_id: Mapped[int | None] = mapped_column(BigInteger)
+    storage_key: Mapped[str] = mapped_column(String(512), nullable=False)
+    original_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    media_type: Mapped[str] = mapped_column(String(160), nullable=False)
+    size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    state: Mapped[str] = mapped_column(String(32), nullable=False)
+    scan_result: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    scanned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    bound_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class AuditEvent(Base):
     __tablename__ = "audit_event"
     __table_args__ = (

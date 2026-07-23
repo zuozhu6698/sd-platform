@@ -1,7 +1,7 @@
 # 00 项目状态与事实矩阵
 
 更新日期：2026-07-23  
-状态：`CORE_FOUNDATIONS_IN_PROGRESS`，工程基线已验证，会话鉴权端点、规则引擎和 Teable adapter 已实现；SSO 回调、填报/outbox 业务闭环与外部 POC 未完成，不允许生产部署。
+状态：`CORE_FOUNDATIONS_IN_PROGRESS`，工程基线已验证，会话鉴权端点、规则引擎、Teable adapter、幂等填报 saga 和 durable outbox 核心已实现；SSO 回调、OA 分发、文件上传/扫描、本人任务和外部 POC 未完成，不允许生产部署。
 
 ## 1. 已确认事实
 
@@ -34,7 +34,7 @@
 
 | 事实面 | 状态 | 证据/下一步 |
 |---|---|---|
-| 代码 | changed-and-verified | 后端 182 tests、91.15% 总覆盖率、纯规则模块 100%；前端 5 tests、被测模块 100% 覆盖率并完成 production build |
+| 代码 | changed-and-verified | 后端 236 tests、90.26% 总覆盖率、纯规则模块 100%；前端 5 tests、被测模块 100% 覆盖率并完成 production build |
 | 运行态 | not-applicable | 尚未部署，不写“可用” |
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |

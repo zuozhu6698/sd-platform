@@ -24,7 +24,7 @@
 
 ### B1 sd_app schema 与迁移
 
-- Alembic 建 `auth_session/submission_command/webhook_receipt/audit_event/job_run/outbox_message/outbox_attempt/report_version/ai_run`。
+- Alembic 建 `auth_session/file_object/submission_command/webhook_receipt/audit_event/job_run/outbox_message/outbox_attempt/report_version/ai_run`。
 - 验收：空库 upgrade、已有库重复 upgrade、downgrade/备份策略、权限越界测试。
 
 ### B2 Teable adapter 与领域建模
@@ -39,7 +39,7 @@
 
 ### B4 安全填报与文件
 
-- 文件扫描 adapter、对象级下载、submission saga、幂等、并发 revision、进度更正流程。
+- 已实现附件元数据/扫描状态约束、submission saga、幂等、并发 revision 和异常恢复；仍需文件上传/扫描 adapter、对象级下载与进度更正审批端点。
 - 验收：双击、两标签、Teable 写后进程崩溃、恶意附件、扫描不可用、跨组织 task_id 均覆盖。
 
 ### B5 规则引擎
@@ -49,7 +49,7 @@
 
 ### B6 worker、scheduler 与 durable outbox
 
-- 7 个计划任务、PG advisory lock、job_run、SKIP LOCKED claim、retry/dead letter、人工补发、对账。
+- 已实现填报完成 outbox 入队、`SKIP LOCKED` claim、租约、指数退避和 dead letter 核心；仍需 7 个计划任务、worker 消费循环、人工补发与对账端点。
 - 验收：多 worker 竞争、进程崩溃、OA 超时结果未知、重复触发、Redis 下线不重发。
 
 ### B7 OA adapter
@@ -142,4 +142,3 @@ GPU/统一模型服务、32B 候选、结构化输出、4 并发、200 条批审
 ### J3 双轨试点
 
 与 Excel 并行两周，自动对账证明零漏发/零重发，业务签字后冻结 Excel。
-

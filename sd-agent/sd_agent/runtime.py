@@ -8,11 +8,14 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from sd_agent.adapters.identity import TeableIdentityStore
+from sd_agent.adapters.submission import TeableSubmissionGateway
 from sd_agent.adapters.teable import TeableClient
 from sd_agent.auth import CsrfProtector, TokenService
 from sd_agent.auth.service import AuthService
 from sd_agent.config import Environment, Settings
 from sd_agent.persistence.sessions import SqlSessionStore
+from sd_agent.persistence.submissions import SqlSubmissionPersistence
+from sd_agent.submission import SubmissionService
 
 
 @dataclass(slots=True)
@@ -22,6 +25,7 @@ class RuntimeResources:
     http: httpx.AsyncClient
     teable: TeableClient | None
     auth: AuthService | None
+    submission: SubmissionService | None
 
     @classmethod
     def create(cls, settings: Settings) -> RuntimeResources:
@@ -62,7 +66,22 @@ class RuntimeResources:
             if engine is not None and teable is not None and jwt_secret and csrf_secret
             else None
         )
-        return cls(settings=settings, engine=engine, http=http, teable=teable, auth=auth)
+        submission = (
+            SubmissionService(
+                persistence=SqlSubmissionPersistence(engine),
+                gateway=TeableSubmissionGateway(teable=teable, engine=engine),
+            )
+            if engine is not None and teable is not None
+            else None
+        )
+        return cls(
+            settings=settings,
+            engine=engine,
+            http=http,
+            teable=teable,
+            auth=auth,
+            submission=submission,
+        )
 
     async def close(self) -> None:
         await self.http.aclose()

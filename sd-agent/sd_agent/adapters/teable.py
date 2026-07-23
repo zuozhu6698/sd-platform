@@ -227,6 +227,32 @@ class TeableClient:
             raise TeableAdapterError("TEABLE_INVALID_RESPONSE", retryable=False) from exc
         return payload.records[0]
 
+    async def update_record(
+        self,
+        table: str,
+        *,
+        record_id: str,
+        fields: dict[str, Any],
+        idempotency_key: str,
+    ) -> TeableRecord:
+        self._validate_fields(table, tuple(fields))
+        if not record_id or "/" in record_id or not idempotency_key:
+            raise ValueError("record id and idempotency key are required")
+        response = await self._request_once(
+            "PATCH",
+            f"{self._record_url(table)}/{record_id}",
+            headers={**self._headers, "Idempotency-Key": idempotency_key},
+            json={
+                "fieldKeyType": "name",
+                "typecast": False,
+                "record": {"fields": fields},
+            },
+        )
+        try:
+            return TeableRecord.model_validate(response.json())
+        except (ValueError, ValidationError) as exc:
+            raise TeableAdapterError("TEABLE_INVALID_RESPONSE", retryable=False) from exc
+
     def _record_url(self, table: str) -> str:
         try:
             table_id = self._table_ids[table]
