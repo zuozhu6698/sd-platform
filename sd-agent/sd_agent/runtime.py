@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import httpx
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
+from sd_agent.adapters.files import HttpFileScanner, LocalObjectStore
 from sd_agent.adapters.identity import TeableIdentityStore
 from sd_agent.adapters.submission import TeableSubmissionGateway
 from sd_agent.adapters.teable import TeableClient
 from sd_agent.auth import CsrfProtector, TokenService
 from sd_agent.auth.service import AuthService
 from sd_agent.config import Environment, Settings
+from sd_agent.files import FileService
+from sd_agent.persistence.files import SqlFileRepository
 from sd_agent.persistence.sessions import SqlSessionStore
 from sd_agent.persistence.submissions import SqlSubmissionPersistence
 from sd_agent.submission import SubmissionService
@@ -28,6 +32,7 @@ class RuntimeResources:
     auth: AuthService | None
     submission: SubmissionService | None
     my_tasks: MyTasksService | None
+    files: FileService | None
 
     @classmethod
     def create(cls, settings: Settings) -> RuntimeResources:
@@ -77,6 +82,16 @@ class RuntimeResources:
             else None
         )
         my_tasks = MyTasksService(teable) if teable is not None else None
+        files = (
+            FileService(
+                scanner=HttpFileScanner(base_url=settings.FILE_SCAN_BASE_URL, http=http),
+                store=LocalObjectStore(Path(settings.FILE_STORAGE_ROOT)),
+                repository=SqlFileRepository(engine),
+                max_bytes=settings.FILE_MAX_MB * 1024 * 1024,
+            )
+            if engine is not None and settings.FILE_SCAN_BASE_URL and settings.FILE_STORAGE_ROOT
+            else None
+        )
         return cls(
             settings=settings,
             engine=engine,
@@ -85,6 +100,7 @@ class RuntimeResources:
             auth=auth,
             submission=submission,
             my_tasks=my_tasks,
+            files=files,
         )
 
     async def close(self) -> None:
