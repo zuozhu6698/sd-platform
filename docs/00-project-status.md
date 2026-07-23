@@ -1,7 +1,7 @@
 # 00 项目状态与事实矩阵
 
 更新日期：2026-07-23  
-状态：`ENGINEERING_BASELINE_VERIFIED`，允许创建远程仓库、运行 CI 和开展 POC；核心业务与外部依赖未完成，不允许生产部署。
+状态：`CORE_FOUNDATIONS_IN_PROGRESS`，工程基线已验证，认证安全原语、规则引擎和 Teable adapter 已实现；API 业务闭环与外部 POC 未完成，不允许生产部署。
 
 ## 1. 已确认事实
 
@@ -34,7 +34,7 @@
 
 | 事实面 | 状态 | 证据/下一步 |
 |---|---|---|
-| 代码 | changed-and-verified | 后端 25 tests、90.76% 分支覆盖率；前端 5 tests、被测模块 100% 覆盖率并完成 production build |
+| 代码 | changed-and-verified | 后端 160 tests、94.04% 总覆盖率、纯规则模块 100%；前端 5 tests、被测模块 100% 覆盖率并完成 production build |
 | 运行态 | not-applicable | 尚未部署，不写“可用” |
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |

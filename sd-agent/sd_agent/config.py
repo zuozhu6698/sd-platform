@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     APP_REDIS_URL: SecretStr = SecretStr("")
     TEABLE_BASE_URL: str = ""
     TEABLE_TOKEN: SecretStr = SecretStr("")
+    TEABLE_TABLE_IDS: dict[str, str] = Field(default_factory=dict)
 
     JWT_ACTIVE_KID: str = "v1"
     JWT_SECRET_V1: SecretStr = SecretStr("")
@@ -83,6 +84,21 @@ class Settings(BaseSettings):
             raise ValueError(f"生产环境缺少高熵配置：{', '.join(missing)}")
         if not self.TEABLE_BASE_URL.startswith(("http://", "https://")):
             raise ValueError("生产环境 TEABLE_BASE_URL 无效")
+        required_tables = {
+            "org_unit",
+            "person",
+            "role_assignment",
+            "key_work",
+            "task",
+            "task_owner",
+            "progress_log",
+            "urge_log",
+            "work_calendar",
+        }
+        if set(self.TEABLE_TABLE_IDS) != required_tables or any(
+            not table_id.startswith("tbl") for table_id in self.TEABLE_TABLE_IDS.values()
+        ):
+            raise ValueError("生产环境 TEABLE_TABLE_IDS 必须完整且有效")
         if self.AUTH_DEV_LOGIN:
             raise ValueError("生产环境禁止 AUTH_DEV_LOGIN")
         if not self.COOKIE_SECURE:
