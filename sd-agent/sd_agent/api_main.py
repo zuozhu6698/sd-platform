@@ -7,6 +7,7 @@ from fastapi import FastAPI
 
 from sd_agent.api.auth import router as auth_router
 from sd_agent.api.health import router as health_router
+from sd_agent.api.home import router as home_router
 from sd_agent.api.meta import router as meta_router
 from sd_agent.api.report import router as report_router
 from sd_agent.config import Settings
@@ -40,6 +41,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health_router)
     app.include_router(meta_router)
     app.include_router(auth_router)
+    app.include_router(home_router)
     app.include_router(report_router)
     return app
 

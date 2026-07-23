@@ -29,7 +29,7 @@
 
 ### B2 Teable adapter 与领域建模
 
-- 9 张领域表映射、字段白名单、REST CRUD、Webhook receipt、`command_id` 对账、bi views contract test。
+- 已实现 9 张领域表映射、字段白名单、安全 REST CRUD、`command_id` 对账和本人任务读取；仍需 Webhook receipt、批量过滤 POC 与 bi views contract test。
 - 验收：禁止 SQL 写 Teable；白名单外字段拒绝；Teable 版本 POC 报告。
 
 ### B3 SSO、会话与 RBAC

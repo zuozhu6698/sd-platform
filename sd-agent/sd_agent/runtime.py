@@ -16,6 +16,7 @@ from sd_agent.config import Environment, Settings
 from sd_agent.persistence.sessions import SqlSessionStore
 from sd_agent.persistence.submissions import SqlSubmissionPersistence
 from sd_agent.submission import SubmissionService
+from sd_agent.tasks import MyTasksService
 
 
 @dataclass(slots=True)
@@ -26,6 +27,7 @@ class RuntimeResources:
     teable: TeableClient | None
     auth: AuthService | None
     submission: SubmissionService | None
+    my_tasks: MyTasksService | None
 
     @classmethod
     def create(cls, settings: Settings) -> RuntimeResources:
@@ -74,6 +76,7 @@ class RuntimeResources:
             if engine is not None and teable is not None
             else None
         )
+        my_tasks = MyTasksService(teable) if teable is not None else None
         return cls(
             settings=settings,
             engine=engine,
@@ -81,6 +84,7 @@ class RuntimeResources:
             teable=teable,
             auth=auth,
             submission=submission,
+            my_tasks=my_tasks,
         )
 
     async def close(self) -> None:
