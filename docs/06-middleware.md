@@ -101,4 +101,4 @@ vllm serve <approved-model-path> \
 
 ## 10. Compose 状态
 
-根 `docker-compose.yml` 是目标拓扑模板。在 B0/O1 创建 Dockerfile、web 构建、Nginx 和迁移 runner 之前，状态是 `NOT_RUNNABLE`，不得执行生产部署。
+根 `docker-compose.yml`、API/worker Dockerfile、web/Nginx 镜像和显式 Alembic runner 已创建，并通过 YAML 解析与本地应用构建；本机没有 Docker，因此 `docker compose config`、镜像构建和 TEST 实机启动仍是 O1 必做门禁。在这些证据完成前状态为 `BUILD_READY_NOT_DEPLOYABLE`，不得执行生产部署。

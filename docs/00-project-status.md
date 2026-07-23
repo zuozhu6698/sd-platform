@@ -1,7 +1,7 @@
 # 00 项目状态与事实矩阵
 
 更新日期：2026-07-23  
-状态：`DESIGN_BASELINE_READY`，允许建立仓库和开展 POC，不允许生产部署。
+状态：`ENGINEERING_BASELINE_VERIFIED`，允许创建远程仓库、运行 CI 和开展 POC；核心业务与外部依赖未完成，不允许生产部署。
 
 ## 1. 已确认事实
 
@@ -14,7 +14,7 @@
 | 应用服务器 | 已有 APP-SRV，承载 Nginx/Teable/PostgreSQL/Redis/API/worker | verified-current |
 | GPU | 应用机不承担 32B 推理；GPU-SRV/统一模型接口尚未提供 | pending |
 | 原始资料 | 上级 DOCX/HTML 作为背景与原型证据保留 | verified-current |
-| 代码/测试/CI | 尚未创建 | pending |
+| 代码/测试/CI | FastAPI/Vue/Alembic/Compose/CI 文件已创建；本地门禁通过，远程 CI 未运行 | changed-and-verified-local |
 | 部署/live | 未部署 | not-applicable |
 
 服务器地址、登录账户、口令、真实域名、OA 密钥不进入 Git 文档。口令曾通过对话传递，首次服务器操作前必须轮换并改用 SSH 密钥。
@@ -34,12 +34,12 @@
 
 | 事实面 | 状态 | 证据/下一步 |
 |---|---|---|
-| 代码 | pending | G0/B0/F0 创建后才能验证 |
+| 代码 | changed-and-verified | 后端 25 tests、90.76% 分支覆盖率；前端 5 tests、被测模块 100% 覆盖率并完成 production build |
 | 运行态 | not-applicable | 尚未部署，不写“可用” |
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |
 | 记忆 | out-of-scope | 不直接修改宿主生成记忆 |
-| 工作区 | pending | 建立独立 Git 仓库后核验 status/remote |
+| 工作区 | changed-and-verified | 独立本地 Git 仓库；`codex/g0-engineering-baseline`；remote/CI 仍 pending |
 
 ## 4. Gate 定义
 
@@ -54,4 +54,3 @@ Gate 6  生产发布与 live verification
 ```
 
 任何 Gate 未通过，后续阶段只能做不会固化错误假设的准备工作。
-

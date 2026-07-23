@@ -1,5 +1,4 @@
-# 目标 Compose 拓扑。当前代码/Dockerfile/deploy 配置尚未创建，状态 NOT_RUNNABLE。
-# O1 必须用 docker compose --env-file <env> config 和 TEST 部署验证后才能用于生产。
+# Compose 拓扑已具备工程文件；仍须经 O1 的 docker compose config 与 TEST 实机验证后才能用于生产。
 
 x-logging: &default-logging
   driver: json-file
@@ -17,8 +16,8 @@ x-agent: &agent-common
   tmpfs: [/tmp]
   logging: *default-logging
   environment:
-    SD_APP_DATABASE_URL: postgresql+asyncpg://${SD_APP_DB_USER}:${SD_APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
-    APP_REDIS_URL: redis://default:${APP_REDIS_PASSWORD}@redis-app:6379/0
+    SD_APP_DATABASE_URL: ${SD_APP_DATABASE_URL:?set URL-encoded SD_APP_DATABASE_URL}
+    APP_REDIS_URL: ${APP_REDIS_URL:?set URL-encoded APP_REDIS_URL}
     TEABLE_BASE_URL: ${TEABLE_BASE_URL}
 
 services:
@@ -31,6 +30,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: --data-checksums
+      SD_APP_DB_USER: ${SD_APP_DB_USER}
+      SD_APP_DB_PASSWORD: ${SD_APP_DB_PASSWORD}
+      BI_READER_USER: ${BI_READER_USER}
+      BI_READER_PASSWORD: ${BI_READER_PASSWORD}
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./deploy/postgres/bootstrap:/docker-entrypoint-initdb.d:ro
@@ -49,12 +52,14 @@ services:
     command: [redis-server, /usr/local/etc/redis/redis.conf, --requirepass, "${TEABLE_REDIS_PASSWORD}"]
     restart: unless-stopped
     networks: [teable-cache]
+    environment:
+      REDIS_PASSWORD: ${TEABLE_REDIS_PASSWORD}
     volumes:
       - redis_teable_data:/data
       - ./deploy/redis/teable.conf:/usr/local/etc/redis/redis.conf:ro
     security_opt: [no-new-privileges:true]
     healthcheck:
-      test: [CMD-SHELL, "redis-cli -a '${TEABLE_REDIS_PASSWORD}' --no-auth-warning ping | grep PONG"]
+      test: [CMD-SHELL, "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli --no-auth-warning ping | grep -q PONG"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -65,12 +70,14 @@ services:
     command: [redis-server, /usr/local/etc/redis/redis.conf, --requirepass, "${APP_REDIS_PASSWORD}"]
     restart: unless-stopped
     networks: [app-cache]
+    environment:
+      REDIS_PASSWORD: ${APP_REDIS_PASSWORD}
     volumes:
       - redis_app_data:/data
       - ./deploy/redis/app.conf:/usr/local/etc/redis/redis.conf:ro
     security_opt: [no-new-privileges:true]
     healthcheck:
-      test: [CMD-SHELL, "redis-cli -a '${APP_REDIS_PASSWORD}' --no-auth-warning ping | grep PONG"]
+      test: [CMD-SHELL, "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli --no-auth-warning ping | grep -q PONG"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -86,9 +93,9 @@ services:
       redis-teable:
         condition: service_healthy
     environment:
-      PRISMA_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PRISMA_DATABASE_URL: ${TEABLE_DATABASE_URL:?set URL-encoded TEABLE_DATABASE_URL}
       BACKEND_CACHE_PROVIDER: redis
-      BACKEND_CACHE_REDIS_URI: redis://default:${TEABLE_REDIS_PASSWORD}@redis-teable:6379/0
+      BACKEND_CACHE_REDIS_URI: ${TEABLE_REDIS_URL:?set URL-encoded TEABLE_REDIS_URL}
       PUBLIC_ORIGIN: ${TEABLE_PUBLIC_ORIGIN}
       SECRET_KEY: ${TEABLE_SECRET_KEY}
       NEXT_ENV_IMAGES_ALL_REMOTE: "true"
@@ -113,7 +120,7 @@ services:
 
   sd-api:
     <<: *agent-common
-    command: [uv, run, python, -m, sd_agent.api_main]
+    command: [uv, run, uvicorn, sd_agent.api_main:app, --host, 0.0.0.0, --port, "8000", --no-access-log]
     networks: [edge, core, app-cache]
     depends_on:
       postgres:
@@ -146,7 +153,7 @@ services:
       - agent_logs:/var/log/sd-agent
 
   nginx:
-    image: ${NGINX_IMAGE:?set immutable NGINX_IMAGE from Harbor}
+    image: ${SD_WEB_IMAGE:?set immutable SD_WEB_IMAGE from Harbor}
     restart: unless-stopped
     networks: [edge]
     depends_on:
@@ -158,8 +165,6 @@ services:
       - "${APP_BIND_IP:-127.0.0.1}:80:80"
       - "${APP_BIND_IP:-127.0.0.1}:443:443"
     volumes:
-      - ./web/dist:/srv/web-dist:ro
-      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./deploy/certs:/etc/nginx/certs:ro
     security_opt: [no-new-privileges:true]
     logging: *default-logging

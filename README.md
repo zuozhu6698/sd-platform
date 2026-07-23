@@ -1,13 +1,14 @@
 # sd-platform
 
-集团重点工作督导数字化平台。当前仓库是**可执行开发基线**，尚未包含业务代码，也未部署。
+集团重点工作督导数字化平台。当前仓库是**已通过本地门禁的工程基线**；核心业务闭环和外部 POC 尚未完成，也未部署。
 
 ## 当前状态
 
 - 工程文档：已完成 2026-07-23 架构/数据/安全/交付终审基线。
-- Git：计划创建 `zuozhu6698/sd-platform` 个人私有仓库；当前无 GitHub Pro。
+- Git：已建立独立本地仓库和 `codex/g0-engineering-baseline` 分支；计划创建 `zuozhu6698/sd-platform` 个人私有仓库，当前无 GitHub Pro。
 - 运行态：未部署。应用服务器已确认，GPU 服务、域名、证书、OA 测试账号和内网制品库仍待确认。
-- 下一步：执行 `docs/05-modules.md` 的 G0，然后并行开展 P0/P1/P2 三项 POC。
+- 工程门禁：后端 Ruff/format/Mypy/25 tests（分支覆盖率 90.76%）通过；前端 lint/typecheck/5 tests/build（被测模块四项覆盖率 100%）通过；文档链接与 secret shape 检查通过。
+- 下一步：完成远程仓库/CI 后并行开展 P0/P1/P2 三项 POC，再进入最小业务闭环。
 
 完整状态与阻塞项见 [docs/00-project-status.md](docs/00-project-status.md)。
 

@@ -23,6 +23,7 @@ node_modules/
 web/dist/
 coverage/
 .vite/
+*.tsbuildinfo
 
 # Runtime data
 data/
@@ -39,6 +40,6 @@ uploads/
 Thumbs.db
 
 # Local tooling
+.tooling/
 .codex-review/
 .gstack/
-
