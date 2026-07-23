@@ -17,6 +17,7 @@ jobs:
   docs:
     name: docs
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
@@ -28,6 +29,7 @@ jobs:
   backend:
     name: backend
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: sd-agent
@@ -51,6 +53,7 @@ jobs:
   frontend:
     name: frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: web
@@ -79,6 +82,7 @@ jobs:
   images:
     name: images
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     needs: [backend, frontend]
     steps:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
