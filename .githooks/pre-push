@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+while read local_ref local_sha remote_ref remote_sha
+do
+  if [ "$local_ref" = "refs/heads/main" ]; then
+    if [ "${SD_ALLOW_INITIAL_MAIN_PUSH:-}" = "initial-bootstrap" ] &&
+       [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+      continue
+    fi
+
+    echo "拒绝直接推送 main。请从 codex/* 分支提交 Pull Request。" >&2
+    exit 1
+  fi
+done
+
+exit 0

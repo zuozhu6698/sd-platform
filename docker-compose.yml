@@ -1,0 +1,181 @@
+# 目标 Compose 拓扑。当前代码/Dockerfile/deploy 配置尚未创建，状态 NOT_RUNNABLE。
+# O1 必须用 docker compose --env-file <env> config 和 TEST 部署验证后才能用于生产。
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "50m"
+    max-file: "5"
+
+x-agent: &agent-common
+  image: ${SD_AGENT_IMAGE:?set immutable SD_AGENT_IMAGE from Harbor}
+  env_file: .env
+  restart: unless-stopped
+  networks: [core, app-cache]
+  security_opt: [no-new-privileges:true]
+  read_only: true
+  tmpfs: [/tmp]
+  logging: *default-logging
+  environment:
+    SD_APP_DATABASE_URL: postgresql+asyncpg://${SD_APP_DB_USER}:${SD_APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    APP_REDIS_URL: redis://default:${APP_REDIS_PASSWORD}@redis-app:6379/0
+    TEABLE_BASE_URL: ${TEABLE_BASE_URL}
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:?set immutable POSTGRES_IMAGE from Harbor}
+    restart: unless-stopped
+    networks: [core]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: --data-checksums
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./deploy/postgres/bootstrap:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${APP_BIND_IP:-127.0.0.1}:5432:5432" # host firewall 仍须限制为观远来源
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    security_opt: [no-new-privileges:true]
+    logging: *default-logging
+
+  redis-teable:
+    image: ${REDIS_IMAGE:?set immutable REDIS_IMAGE from Harbor}
+    command: [redis-server, /usr/local/etc/redis/redis.conf, --requirepass, "${TEABLE_REDIS_PASSWORD}"]
+    restart: unless-stopped
+    networks: [teable-cache]
+    volumes:
+      - redis_teable_data:/data
+      - ./deploy/redis/teable.conf:/usr/local/etc/redis/redis.conf:ro
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD-SHELL, "redis-cli -a '${TEABLE_REDIS_PASSWORD}' --no-auth-warning ping | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging: *default-logging
+
+  redis-app:
+    image: ${REDIS_IMAGE:?set immutable REDIS_IMAGE from Harbor}
+    command: [redis-server, /usr/local/etc/redis/redis.conf, --requirepass, "${APP_REDIS_PASSWORD}"]
+    restart: unless-stopped
+    networks: [app-cache]
+    volumes:
+      - redis_app_data:/data
+      - ./deploy/redis/app.conf:/usr/local/etc/redis/redis.conf:ro
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD-SHELL, "redis-cli -a '${APP_REDIS_PASSWORD}' --no-auth-warning ping | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging: *default-logging
+
+  teable:
+    image: ${TEABLE_IMAGE:?set POC-approved immutable TEABLE_IMAGE from Harbor}
+    restart: unless-stopped
+    networks: [edge, core, teable-cache]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-teable:
+        condition: service_healthy
+    environment:
+      PRISMA_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      BACKEND_CACHE_PROVIDER: redis
+      BACKEND_CACHE_REDIS_URI: redis://default:${TEABLE_REDIS_PASSWORD}@redis-teable:6379/0
+      PUBLIC_ORIGIN: ${TEABLE_PUBLIC_ORIGIN}
+      SECRET_KEY: ${TEABLE_SECRET_KEY}
+      NEXT_ENV_IMAGES_ALL_REMOTE: "true"
+    volumes:
+      - teable_data:/app/.assets
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, curl, -f, http://127.0.0.1:3000/health]
+      start_period: 10s
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    logging: *default-logging
+
+  migrate:
+    <<: *agent-common
+    profiles: [tools]
+    command: [uv, run, alembic, upgrade, head]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  sd-api:
+    <<: *agent-common
+    command: [uv, run, python, -m, sd_agent.api_main]
+    networks: [edge, core, app-cache]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-app:
+        condition: service_healthy
+      teable:
+        condition: service_healthy
+    volumes:
+      - ./deploy/config:/app/config:ro
+      - agent_logs:/var/log/sd-agent
+    healthcheck:
+      test: [CMD, uv, run, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  sd-worker:
+    <<: *agent-common
+    command: [uv, run, python, -m, sd_agent.worker_main]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis-app:
+        condition: service_healthy
+      teable:
+        condition: service_healthy
+    volumes:
+      - ./deploy/config:/app/config:ro
+      - agent_logs:/var/log/sd-agent
+
+  nginx:
+    image: ${NGINX_IMAGE:?set immutable NGINX_IMAGE from Harbor}
+    restart: unless-stopped
+    networks: [edge]
+    depends_on:
+      sd-api:
+        condition: service_healthy
+      teable:
+        condition: service_started
+    ports:
+      - "${APP_BIND_IP:-127.0.0.1}:80:80"
+      - "${APP_BIND_IP:-127.0.0.1}:443:443"
+    volumes:
+      - ./web/dist:/srv/web-dist:ro
+      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/certs:/etc/nginx/certs:ro
+    security_opt: [no-new-privileges:true]
+    logging: *default-logging
+
+networks:
+  edge: {}
+  core:
+    internal: true
+  teable-cache:
+    internal: true
+  app-cache:
+    internal: true
+
+volumes:
+  pg_data: {}
+  redis_teable_data: {}
+  redis_app_data: {}
+  teable_data: {}
+  agent_logs: {}
