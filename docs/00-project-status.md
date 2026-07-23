@@ -7,7 +7,7 @@
 
 | 主题 | 当前事实 | 状态 |
 |---|---|---|
-| GitHub owner | `zuozhu6698` | verified-current |
+| GitHub owner/remote | `zuozhu6698` / `https://github.com/zuozhu6698/sd-platform.git` | verified-current |
 | 提交显示名 | `zuozhu6698` | verified-current |
 | 仓库 | 个人私有仓库，计划名 `sd-platform` | verified-current |
 | GitHub 方案 | 无 Pro，私有 main 暂不能强制保护 | verified-current |
@@ -34,12 +34,12 @@
 
 | 事实面 | 状态 | 证据/下一步 |
 |---|---|---|
-| 代码 | changed-and-verified | 后端 246 tests、90.95% 总覆盖率、纯规则模块 100%；前端 5 tests、被测模块 100% 覆盖率并完成 production build |
+| 代码 | changed-and-verified | 后端 246 tests、90.95% 总覆盖率、纯规则模块 100%；前端 9 tests、被测模块 100% 覆盖率并完成 production build |
 | 运行态 | not-applicable | 尚未部署，不写“可用” |
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |
 | 记忆 | out-of-scope | 不直接修改宿主生成记忆 |
-| 工作区 | changed-and-verified | 独立本地 Git 仓库；`codex/g0-engineering-baseline`；remote/CI 仍 pending |
+| 工作区 | changed-and-verified | 独立本地 Git 仓库；`codex/g0-engineering-baseline`；origin 已核验为空仓库，首次 push/CI 仍 pending |
 
 ## 4. Gate 定义
 

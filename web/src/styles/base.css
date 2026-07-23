@@ -278,6 +278,80 @@ h1 {
   text-decoration: none;
 }
 
+.primary-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.workspace-heading,
+.section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.workspace-heading h1 {
+  margin-bottom: 10px;
+}
+
+.workspace-heading p:last-child {
+  margin-bottom: 0;
+  color: var(--color-muted);
+}
+
+.task-section {
+  margin-top: 42px;
+}
+
+.task-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.task-card {
+  padding: 22px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.task-card__meta,
+.task-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.task-card h3 {
+  margin: 12px 0;
+  line-height: 1.55;
+}
+
+.progress-track {
+  height: 7px;
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--color-brand-soft);
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-brand);
+}
+
+.risk-flag {
+  margin: 14px 0 0;
+  color: var(--color-danger);
+  font-size: 13px;
+}
+
 @media (max-width: 760px) {
   .topbar {
     align-items: flex-start;
@@ -313,6 +387,11 @@ h1 {
     grid-template-columns: 1fr;
     gap: 24px;
     padding: 26px 22px;
+  }
+
+  .workspace-heading {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   h1 {
