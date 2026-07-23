@@ -39,7 +39,7 @@
 
 ### B4 安全填报与文件
 
-- 已实现附件元数据/扫描状态约束、submission saga、幂等、并发 revision 和异常恢复；仍需文件上传/扫描 adapter、对象级下载与进度更正审批端点。
+- 已实现附件元数据、真实类型/OOXML 宏检查、同步扫描 fail-closed、隔离、SHA-256、对象级下载授权、submission saga、幂等、并发 revision 和异常恢复；仍需 PostgreSQL/对象存储/扫描器 adapter、上传下载 API 与进度更正审批端点。
 - 验收：双击、两标签、Teable 写后进程崩溃、恶意附件、扫描不可用、跨组织 task_id 均覆盖。
 
 ### B5 规则引擎
