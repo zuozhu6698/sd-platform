@@ -60,7 +60,9 @@ onMounted(() => {
           工作总览
         </RouterLink>
         <a href="/home#tasks">我的任务</a>
-        <span aria-disabled="true">安全填报</span>
+        <RouterLink to="/report">
+          安全填报
+        </RouterLink>
         <span aria-disabled="true">督导台账</span>
       </nav>
 
