@@ -7,7 +7,12 @@ import httpx
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
+from sd_agent.adapters.identity import TeableIdentityStore
+from sd_agent.adapters.teable import TeableClient
+from sd_agent.auth import CsrfProtector, TokenService
+from sd_agent.auth.service import AuthService
 from sd_agent.config import Environment, Settings
+from sd_agent.persistence.sessions import SqlSessionStore
 
 
 @dataclass(slots=True)
@@ -15,6 +20,8 @@ class RuntimeResources:
     settings: Settings
     engine: AsyncEngine | None
     http: httpx.AsyncClient
+    teable: TeableClient | None
+    auth: AuthService | None
 
     @classmethod
     def create(cls, settings: Settings) -> RuntimeResources:
@@ -24,14 +31,38 @@ class RuntimeResources:
             if database_url
             else None
         )
-        return cls(
-            settings=settings,
-            engine=engine,
-            http=httpx.AsyncClient(
-                timeout=httpx.Timeout(connect=3, read=5, write=5, pool=3),
-                follow_redirects=False,
-            ),
+        http = httpx.AsyncClient(
+            timeout=httpx.Timeout(connect=3, read=5, write=5, pool=3),
+            follow_redirects=False,
         )
+        token = settings.TEABLE_TOKEN.get_secret_value()
+        teable = (
+            TeableClient(
+                base_url=settings.TEABLE_BASE_URL,
+                token=token,
+                table_ids=settings.TEABLE_TABLE_IDS,
+                http=http,
+            )
+            if settings.TEABLE_BASE_URL and token and settings.TEABLE_TABLE_IDS
+            else None
+        )
+        jwt_secret = settings.JWT_SECRET_V1.get_secret_value()
+        csrf_secret = settings.CSRF_SECRET.get_secret_value()
+        auth = (
+            AuthService(
+                tokens=TokenService(
+                    active_kid=settings.JWT_ACTIVE_KID,
+                    keys={"v1": jwt_secret},
+                    expire_minutes=settings.JWT_EXPIRE_MINUTES,
+                ),
+                csrf=CsrfProtector(csrf_secret),
+                sessions=SqlSessionStore(engine),
+                identities=TeableIdentityStore(teable),
+            )
+            if engine is not None and teable is not None and jwt_secret and csrf_secret
+            else None
+        )
+        return cls(settings=settings, engine=engine, http=http, teable=teable, auth=auth)
 
     async def close(self) -> None:
         await self.http.aclose()

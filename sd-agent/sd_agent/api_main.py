@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from sd_agent.api.auth import router as auth_router
 from sd_agent.api.health import router as health_router
 from sd_agent.api.meta import router as meta_router
 from sd_agent.config import Settings
@@ -37,6 +38,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_error_handlers(app)
     app.include_router(health_router)
     app.include_router(meta_router)
+    app.include_router(auth_router)
     return app
 
 
