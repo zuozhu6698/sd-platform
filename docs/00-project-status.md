@@ -11,10 +11,11 @@
 | 提交显示名 | `zuozhu6698` | verified-current |
 | 仓库 | 个人 public 仓库 `zuozhu6698/sd-platform` | verified-current |
 | GitHub 方案 | GitHub Free public 仓库；首次引导后启用 main 保护与 required checks | changed-not-yet-verified |
-| 应用服务器 | 已有 APP-SRV，承载 Nginx/Teable/PostgreSQL/Redis/API/worker | verified-current |
+| 应用服务器 | 已完成只读资产核验；详细清单不进入 public 仓库 | verified-current-local |
+| 服务器运行态 | 现状不满足目标 Compose 栈的直接部署前提，需运维完成容量与运行时决策 | pending |
 | GPU | 应用机不承担 32B 推理；GPU-SRV/统一模型接口尚未提供 | pending |
 | 原始资料 | 上级 DOCX/HTML 作为背景与原型证据保留 | verified-current |
-| 代码/测试/CI | FastAPI/Vue/Alembic/Compose/CI 文件已创建；本地门禁通过，远程 CI 未运行 | changed-and-verified-local |
+| 代码/测试/CI | FastAPI/Vue/Alembic/Compose/CI 已创建；本地门禁通过；GitHub Actions run `29989304790` 四个 job 全绿 | changed-and-verified-remote |
 | 部署/live | 未部署 | not-applicable |
 
 服务器地址、登录账户、口令、真实域名、OA 密钥不进入 Git 文档。口令曾通过对话传递，首次服务器操作前必须轮换并改用 SSH 密钥。
@@ -29,6 +30,7 @@
 | EXT-04 | 观远测试环境来源 IP、账号和网络策略 | BI 管理员 | M4 |
 | EXT-05 | Harbor/Nexus 地址、镜像同步和制品保留策略 | 运维 | G0、M4 |
 | EXT-06 | 需求、架构、安全、上线签字人 | 项目负责人 | Gate 0、M5 |
+| EXT-07 | APP-SRV 容量/拆分方案与容器运行时安装授权 | 运维/项目负责人 | O1、M4 |
 
 ## 3. 六个事实面
 
@@ -39,7 +41,7 @@
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |
 | 记忆 | out-of-scope | 不直接修改宿主生成记忆 |
-| 工作区 | changed-and-verified | 独立本地 Git 仓库；`codex/g0-engineering-baseline`；origin 已核验为空仓库，首次 push/CI 仍 pending |
+| 工作区 | changed-and-verified | 独立 Git 仓库；功能分支与 main 已推送；remote CI 全绿；GitHub 默认分支/保护规则仍待设置 |
 
 ## 4. Gate 定义
 

@@ -6,10 +6,11 @@
 
 - 工程文档：已完成 2026-07-23 架构/数据/安全/交付终审基线。
 - Git：已建立独立本地仓库和 `codex/g0-engineering-baseline` 分支；origin 已配置为 `zuozhu6698/sd-platform` 个人 public 仓库，可使用 GitHub Free 的 public 仓库分支保护。
-- 运行态：未部署。应用服务器已确认，GPU 服务、域名、证书、OA 测试账号和内网制品库仍待确认。
+- 运行态：未部署。应用服务器已完成只读核验，但尚不满足目标 Compose 栈的直接部署前提；内部资产明细不进入 public 仓库。
 - 工程门禁：后端 Ruff/format/Mypy/246 tests（总覆盖率 90.95%，纯规则模块 100%）通过；前端 lint/typecheck/9 tests/build（被测模块四项覆盖率 100%）通过；文档链接与 secret shape 检查通过。
 - 核心底座：JWT/CSRF/重定向防护、PostgreSQL session 撤销、动态角色范围、`/api/me`、`/api/logout`、`/api/home/summary` 本人任务、纯规则引擎、Teable 九表字段白名单与安全重试适配器、`/api/report/submit` 幂等 saga、附件扫描状态约束和 durable outbox 核心已实现；OA start/callback、OA 分发、文件上传/扫描与真实 Teable/OA 联调仍以 POC 为准。
-- 下一步：完成远程仓库/CI 后并行开展 P0/P1/P2 三项 POC，再进入最小业务闭环。
+- 远程证据：GitHub Actions run `29989304790` 的 docs/backend/frontend/images 四个 job 全绿。
+- 下一步：设置 GitHub 默认分支与保护规则，完成应用机容量/运行时决策；OA 按项目负责人要求暂缓，先推进其余闭环。
 
 完整状态与阻塞项见 [docs/00-project-status.md](docs/00-project-status.md)。
 
