@@ -33,3 +33,26 @@ async def test_runtime_does_not_build_scheduler_without_database() -> None:
         assert resources.scheduler is None
     finally:
         await resources.close()
+
+
+async def test_runtime_registers_the_offline_oa_handler_only_when_explicit() -> None:
+    resources = RuntimeResources.create(
+        Settings(
+            _env_file=None,
+            ENV="test",
+            OA_MODE="mock",
+            SD_APP_DATABASE_URL="postgresql+asyncpg://test:test@127.0.0.1/test",
+        )
+    )
+    try:
+        assert resources.outbox is not None
+    finally:
+        await resources.close()
+
+
+def test_runtime_rejects_duplicate_mock_oa_registration() -> None:
+    with pytest.raises(ValueError, match="duplicate oa.complete_pending"):
+        RuntimeResources.create(
+            Settings(_env_file=None, ENV="test", OA_MODE="mock"),
+            outbox_handlers={"oa.complete_pending": lambda _item: None},  # type: ignore[dict-item]
+        )

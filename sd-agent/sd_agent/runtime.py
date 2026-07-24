@@ -17,6 +17,7 @@ from sd_agent.auth import CsrfProtector, TokenService
 from sd_agent.auth.service import AuthService
 from sd_agent.config import Environment, Settings
 from sd_agent.files import FileService
+from sd_agent.oa import MockOaGateway, OaOutboxHandler
 from sd_agent.outbox import HandlerOutboxDispatcher, OutboxHandler, OutboxProcessor
 from sd_agent.outbox.admin import OutboxAdminService
 from sd_agent.persistence.files import SqlFileRepository
@@ -59,6 +60,8 @@ class RuntimeResources:
             missing = sorted(required_jobs - set(jobs))
             unknown = sorted(set(jobs) - required_jobs)
             raise ValueError(f"job handler registry mismatch: missing={missing}, unknown={unknown}")
+        if settings.OA_MODE == "mock" and "oa.complete_pending" in (outbox_handlers or {}):
+            raise ValueError("duplicate oa.complete_pending handler")
         database_url = settings.SD_APP_DATABASE_URL.get_secret_value()
         engine = (
             create_async_engine(database_url, pool_pre_ping=True, pool_recycle=1800)
@@ -116,6 +119,8 @@ class RuntimeResources:
             else None
         )
         handlers = dict(outbox_handlers or {})
+        if settings.OA_MODE == "mock":
+            handlers["oa.complete_pending"] = OaOutboxHandler(MockOaGateway())
         outbox = (
             OutboxProcessor(
                 repository=SqlOutboxRepository(engine),

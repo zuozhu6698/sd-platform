@@ -56,8 +56,9 @@
 
 ### B7 OA adapter
 
-- token、待办、已办、消息、SSO 差异配置；完整 URL 脱敏；真实测试环境 10 用例。
-- 验收：contract mock + OA TEST 报告；凭据不进日志/异常。
+- Wave 1 已实现 `complete_pending` durable outbox handler、有状态 OA mock、同业务键去重/冲突、限流/服务故障/业务拒绝、已接收但客户端超时后同键收敛，以及 HTTPS HTTP adapter 骨架；`OA_MODE=mock` 必须显式开启且生产环境强制拒绝。
+- HTTP adapter 使用 header 凭据与幂等键，错误分类不复制响应正文、完整 URL 或凭据。真实致远 token、待办、已办、消息、SSO 字段映射和 TEST 10 用例保持 `pending-EXT-03`。
+- 验收：offline contract mock 已通过；OA TEST 报告尚未取得，不得宣称真实送达。
 
 ### B8 AI 流水线
 

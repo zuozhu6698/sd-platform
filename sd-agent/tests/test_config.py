@@ -58,3 +58,11 @@ def test_production_security_invariants(field: str, value: object, message: str)
 def test_redirect_paths_accept_comma_separated_env_shape() -> None:
     settings = Settings(_env_file=None, ALLOWED_REDIRECT_PATHS="/,/home,/m/report")
     assert settings.ALLOWED_REDIRECT_PATHS == ("/", "/home", "/m/report")
+
+
+def test_oa_mode_is_explicit_and_production_rejects_mock() -> None:
+    assert Settings(_env_file=None, OA_MODE="MOCK").OA_MODE == "mock"
+    with pytest.raises(ValidationError, match="OA_MODE"):
+        Settings(_env_file=None, OA_MODE="http")
+    with pytest.raises(ValidationError, match="生产环境禁止 OA mock"):
+        Settings(_env_file=None, **production_settings(OA_MODE="mock"))
