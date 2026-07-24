@@ -105,6 +105,8 @@ work_calendar 独立提供工作日/节假日规则
 
 同一 dead letter 同时只能有一条未消费补发审批。`supervision_admin` 审批后，必须由不同人员的 `ops_admin` 消费审批并把消息重置为 `retry`；历史 attempt 不删除，补发批次的重试计数从 0 重新开始。审批和执行均使用独立 UUID 幂等键，并与 `audit_event` 在同一事务提交。
 
+`job_run` 的正确性边界是 PostgreSQL：执行前先申请由 `job + scheduled_for` 派生的事务级 advisory lock，再以 `(job, scheduled_for)` 唯一键插入 `running` 记录；竞争失败或唯一键冲突均按幂等跳过。完成时只允许把仍为 `running` 的同一 `job_run_id` 改为 `succeeded/failed`，外部异常正文不得写入，仅保存稳定 `error_code`。
+
 ## 5. 读写矩阵
 
 | 主体 | 允许 | 禁止 |

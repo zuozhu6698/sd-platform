@@ -27,9 +27,15 @@ class FakeLoop:
 
 
 class FakeResources:
-    def __init__(self, *, outbox: object | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        outbox: object | None = None,
+        scheduler: object | None = None,
+    ) -> None:
         self.closed = False
         self.outbox = outbox
+        self.scheduler = scheduler
 
     async def close(self) -> None:
         self.closed = True
@@ -38,6 +44,23 @@ class FakeResources:
 class FakeLogger:
     async def ainfo(self, _event: str, **_values: object) -> None:
         return None
+
+
+class FakeSchedulerWorker:
+    instances: list[FakeSchedulerWorker] = []
+
+    def __init__(self, service: object, *, logger: object) -> None:
+        self.service = service
+        self.logger = logger
+        self.started = False
+        self.stopped = False
+        self.instances.append(self)
+
+    async def start(self) -> None:
+        self.started = True
+
+    async def stop(self) -> None:
+        self.stopped = True
 
 
 async def test_worker_starts_and_closes_resources(monkeypatch: Any) -> None:
@@ -49,7 +72,7 @@ async def test_worker_starts_and_closes_resources(monkeypatch: Any) -> None:
     monkeypatch.setattr(
         worker_main.RuntimeResources,
         "create",
-        lambda _settings: resources,
+        lambda _settings, **_options: resources,
     )
 
     await worker_main.run_worker(Settings(_env_file=None, ENV="test"))
@@ -70,7 +93,7 @@ async def test_worker_tolerates_windows_signal_limit(monkeypatch: Any) -> None:
     monkeypatch.setattr(
         worker_main.RuntimeResources,
         "create",
-        lambda _settings: resources,
+        lambda _settings, **_options: resources,
     )
 
     await worker_main.run_worker(Settings(_env_file=None, ENV="test"))
@@ -90,7 +113,7 @@ async def test_worker_rejects_enabled_outbox_without_database(monkeypatch: Any) 
     monkeypatch.setattr(
         worker_main.RuntimeResources,
         "create",
-        lambda _settings: resources,
+        lambda _settings, **_options: resources,
     )
 
     try:
@@ -100,6 +123,50 @@ async def test_worker_rejects_enabled_outbox_without_database(monkeypatch: Any) 
     else:
         raise AssertionError("expected missing database configuration to fail")
 
+    assert resources.closed is True
+
+
+async def test_worker_rejects_enabled_scheduler_without_complete_handlers(monkeypatch: Any) -> None:
+    resources = FakeResources()
+    monkeypatch.setattr(worker_main.asyncio, "Event", ImmediateEvent)
+    monkeypatch.setattr(worker_main, "logger", FakeLogger())
+    monkeypatch.setattr(worker_main.asyncio, "get_running_loop", lambda: FakeLoop())
+    monkeypatch.setattr(
+        worker_main.RuntimeResources,
+        "create",
+        lambda _settings, **_options: resources,
+    )
+
+    try:
+        await worker_main.run_worker(Settings(_env_file=None, ENV="test", CRON_ENABLED=True))
+    except RuntimeError as exc:
+        assert str(exc) == "CRON_ENABLED requires database and all registered job handlers"
+    else:
+        raise AssertionError("expected incomplete scheduler configuration to fail")
+
+    assert resources.closed is True
+
+
+async def test_worker_starts_and_stops_enabled_scheduler(monkeypatch: Any) -> None:
+    service = object()
+    resources = FakeResources(scheduler=service)
+    FakeSchedulerWorker.instances.clear()
+    monkeypatch.setattr(worker_main.asyncio, "Event", ImmediateEvent)
+    monkeypatch.setattr(worker_main, "logger", FakeLogger())
+    monkeypatch.setattr(worker_main.asyncio, "get_running_loop", lambda: FakeLoop())
+    monkeypatch.setattr(
+        worker_main.RuntimeResources,
+        "create",
+        lambda _settings, **_options: resources,
+    )
+    monkeypatch.setattr(worker_main, "SchedulerWorker", FakeSchedulerWorker)
+
+    await worker_main.run_worker(Settings(_env_file=None, ENV="test", CRON_ENABLED=True))
+
+    assert len(FakeSchedulerWorker.instances) == 1
+    assert FakeSchedulerWorker.instances[0].service is service
+    assert FakeSchedulerWorker.instances[0].started is True
+    assert FakeSchedulerWorker.instances[0].stopped is True
     assert resources.closed is True
 
 

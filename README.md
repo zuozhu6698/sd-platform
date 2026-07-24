@@ -7,9 +7,9 @@
 - 工程文档：已完成 2026-07-23 架构/数据/安全/交付终审基线。
 - Git：已建立独立本地仓库和 `codex/g0-engineering-baseline` 分支；origin 已配置为 `zuozhu6698/sd-platform` 个人 public 仓库，可使用 GitHub Free 的 public 仓库分支保护。
 - 运行态：未部署。应用服务器已完成只读核验，但尚不满足目标 Compose 栈的直接部署前提；内部资产明细不进入 public 仓库。
-- 工程门禁：后端 Ruff/format/Mypy/334 tests（总覆盖率 93.79%，outbox 核心模块 100%）通过；前端 lint/typecheck/11 tests/build（被测模块四项覆盖率 100%）通过；文档链接与 secret shape 检查通过。
-- 核心底座：JWT/CSRF/重定向防护、PostgreSQL session 撤销、动态角色范围、本人任务、纯规则引擎、Teable 安全适配器、幂等填报 saga、文件类型/宏/扫描/隔离/原子存储/上传下载授权链路、durable outbox worker 和 dead letter 双人审批补发已实现；OA start/callback、OA 分发、真实扫描 sidecar 与 Teable/OA 联调仍以 POC 为准。
-- 远程证据：PR #5 及合并后 GitHub Actions run `30059161949` 中 docs/backend/frontend/images 四个 job 全绿；`main`=`30342d4`。
+- 工程门禁：后端 Ruff/format/Mypy/361 tests（总覆盖率 94.30%，outbox/scheduler 核心模块 100%）通过；前端 lint/typecheck/11 tests/build（被测模块四项覆盖率 100%）通过；文档链接与 secret shape 检查通过。
+- 核心底座：JWT/CSRF/重定向防护、PostgreSQL session 撤销、动态角色范围、本人任务、纯规则引擎、Teable 安全适配器、幂等填报 saga、文件安全链路、durable outbox、dead letter 双人审批补发，以及 7 类计划任务目录/唯一运行证明/worker 启停已实现；计划任务业务 handlers、手动补跑、OA 分发、真实扫描 sidecar 与外部联调仍未完成。
+- 远程证据：PR #6 合并后的 GitHub Actions run `30059396830` 中 docs/backend/frontend/images 四个 job 全绿；`main`=`172ad79`。scheduler runtime 分支尚待独立 PR 门禁。
 - GitHub 治理：PR #1 经 docs/backend/frontend/images 四项 checks 全绿后 squash merge；`main` 已设为默认并启用严格保护规则。
 - 下一步：完成应用机容量/运行时决策；OA 按项目负责人要求暂缓，先推进其余闭环。
 
