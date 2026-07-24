@@ -114,6 +114,12 @@ Header：`Idempotency-Key: <uuid>`、`X-CSRF-Token: ...`
 
 API 进程不得直接执行 handler。未知 job 返回 `JOB_NOT_FOUND`；引用不存在、非失败或不同 job 的记录分别返回 404/409；同一失败记录重复申请返回 409；同幂等键不同载荷返回 `IDEMPOTENCY_CONFLICT`。
 
+### 4.4 AI 内部结构化契约
+
+`ReviewResult` 严格禁止额外字段：`result=通过|标记`、`flags` 只能取敷衍填报/量化缺失/前后矛盾/目标偏离/进度风险、`evidence`、`confidence=0..1`、最长 80 字 `question`、`source_ids`。通过不得带 flags/question，标记必须带 flags/question；低于 `AI_REVIEW_CONFIDENCE_THRESHOLD=0.6` 的标记在服务层降级为通过并保留降级说明。
+
+`WeeklyDraft` 为 `content_md + source_ids`，Markdown 禁 HTML/控制字符；每条事实结论使用 `[T{task_id}]`，渲染标记集合必须与输出 `source_ids` 完全一致，且全部属于代码事实表中的 task 白名单。`UrgeText` 只含最长 500 字安全文本。以上均为 worker 内部契约，不是浏览器直连模型 API。
+
 错误：
 
 - `REPORT_TOO_SHORT` 422；
