@@ -27,7 +27,7 @@ AI、复杂地图、BI 驾驶舱在最小闭环稳定后接入。
 | 阶段 | 任务卡 | 交付物 | 退出条件 |
 |---|---|---|---|
 | M0 基线 | G0/G1/B0/F0 | public repo、受保护 main、CI、空工程、锁文件、文档门禁 | Gate 1 |
-| M1 POC/底座 | P0/P1/P2/O0/B1/B2 | 3 份 POC、9 领域表、sd_app/bi 迁移、资产网络报告 | Gate 2 |
+| M1 POC/底座 | P0/P1/P2/O0/B1/B2 | 本地替身契约、9 领域表、sd_app/bi 迁移；真实 POC 按 §4b 进入 Wave 3 | Gate 2-offline |
 | M2 最小闭环 | B3/B4/B5/B6/B7/F1/F2/J0 | SSO/填报/催办/OA/审计 | Gate 3 |
 | M3 AI/报告 | B8/B9/F3/J1 | AI 审读、人工追问、报告签发/溯源 | eval 达标 |
 | M4 UI/运维 | F4/O1/O2/J2 | 地图、工作台、BI、TEST 部署、恢复/性能/安全 | Gate 4 |
@@ -48,6 +48,34 @@ AI、复杂地图、BI 驾驶舱在最小闭环稳定后接入。
 | H 验收 | J0 → J1 → J2 → J3 | tests/runbooks | 上游阶段 |
 
 执行顺序：M0 后同时启动 A/B/C/O0；合并接口/迁移基线后启动 E/F；G 不阻塞 J0；最后 H。并行 worktree 不能同时改 `docs/04`、`docs/03` 或共享迁移头，契约/迁移变更由 Lane A 串行合并。
+
+## 4b. Offline-first 波次与外部依赖纪律
+
+外部依赖未到位时不得空等，也不得用不可运行的占位代码冒充完成。开发按以下三波推进：
+
+| Wave | 必做范围 | 允许的本地证据 | 完成条件 |
+|---|---|---|---|
+| Wave 1 核心闭环 | B1-B7、F1-F2、J0；SSO→本人任务→安全填报→规则催办→OA mock 回执→审计/对账 | SSO stub、本地 Teable、OA mock、ClamAV 替身；真实 adapter 保留同一契约 | 自动化 E2E trace、权限矩阵、outbox fault injection、对账零差异；核心链路不依赖 GPU |
+| Wave 2 产品闭环 | B8-B9、F3-F4、J1；AI 审读/人工追问/周报、管理端、对齐地图、统计展示 | 本地小模型/确定性 LLM stub、固定数据集、BI 只读契约测试 | AI 输出经 schema/溯源/人工裁决；页面空/慢/错/无权限齐全；100+ 事项性能证据 |
+| Wave 3 外部联调/部署 | P0-P2、O0-O2、J2-J3 和真实 OA/GPU/观远/Harbor/APP-SRV 验收 | 只允许 adapter 骨架、contract mock 和用例清单先行 | 对应 EXT 到位后取得真实 POC/TEST/恢复/签字证据；未取得不得标记完成 |
+
+Wave 3 外部依赖标记：
+
+| 依赖 | 未到位时允许提交 | 禁止宣称 |
+|---|---|---|
+| EXT-01 GPU/集团模型服务 | LLM adapter、JSON Schema、固定 eval、小模型替身；标 `pending-EXT-01` | 模型质量、吞吐或 SLA 已验收 |
+| EXT-03 OA/SSO TEST | OA/SSO adapter、mock server、重放/回执/超时 10 用例；标 `pending-EXT-03` | 真实 SSO、消息送达或 OA 幂等已验证 |
+| EXT-04 观远 | `bi.*` 稳定视图、只读账号契约、样例查询；标 `pending-EXT-04` | 观远连通、刷新或看板验收 |
+| EXT-05 Harbor/Nexus | 固定 digest 的 Dockerfile、SBOM/扫描工作流；标 `pending-EXT-05` | 内网制品推送、保留或回滚已验证 |
+| EXT-07 APP-SRV | Compose/Nginx/监控/备份脚本和本机 config 测试；标 `pending-EXT-07` | TEST/生产容量、部署、恢复或 live 可用 |
+
+执行纪律：
+
+1. 每张卡从 `codex/<card>-<slug>` 分支经 PR、required CI 全绿后 squash merge；PR 必须注明 Wave 和依赖的 EXT 编号。
+2. 契约、表结构、阈值与代码在同一 PR 更新 docs、迁移和测试；每批完成后更新 `docs/00-project-status.md`。
+3. Wave 1/2 的替身必须走与真实 adapter 相同的 service 接口，测试禁止真实外呼；禁止空 handler、永远成功的假回执和绕过权限的 fixture。
+4. Wave 1/2 全部清零并通过 Gate 3 后停止开发，向项目负责人提交证据与 Wave 3 `pending-EXT-*` 清单；未获确认不得进入部署、TEST 或生产验收。
+5. Gate 3 是“本地最小闭环自动自测通过”，不替代 Gate 2 的真实外部 POC，也不证明 Gate 4/5/6。外部证据在 Wave 3 补齐后才能推进相应 Gate。
 
 ## 5. 每阶段证据
 
