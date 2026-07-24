@@ -27,8 +27,9 @@ class FakeLoop:
 
 
 class FakeResources:
-    def __init__(self) -> None:
+    def __init__(self, *, outbox: object | None = None) -> None:
         self.closed = False
+        self.outbox = outbox
 
     async def close(self) -> None:
         self.closed = True
@@ -73,6 +74,33 @@ async def test_worker_tolerates_windows_signal_limit(monkeypatch: Any) -> None:
     )
 
     await worker_main.run_worker(Settings(_env_file=None, ENV="test"))
+
+    assert resources.closed is True
+
+
+async def test_worker_rejects_enabled_outbox_without_database(monkeypatch: Any) -> None:
+    resources = FakeResources()
+    monkeypatch.setattr(worker_main.asyncio, "Event", ImmediateEvent)
+    monkeypatch.setattr(worker_main, "logger", FakeLogger())
+    monkeypatch.setattr(
+        worker_main.asyncio,
+        "get_running_loop",
+        lambda: FakeLoop(),
+    )
+    monkeypatch.setattr(
+        worker_main.RuntimeResources,
+        "create",
+        lambda _settings: resources,
+    )
+
+    try:
+        await worker_main.run_worker(
+            Settings(_env_file=None, ENV="test", OUTBOX_ENABLED=True)
+        )
+    except RuntimeError as exc:
+        assert str(exc) == "OUTBOX_ENABLED requires database and registered handlers"
+    else:
+        raise AssertionError("expected missing database configuration to fail")
 
     assert resources.closed is True
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -16,7 +17,9 @@ from sd_agent.auth import CsrfProtector, TokenService
 from sd_agent.auth.service import AuthService
 from sd_agent.config import Environment, Settings
 from sd_agent.files import FileService
+from sd_agent.outbox import HandlerOutboxDispatcher, OutboxHandler, OutboxProcessor
 from sd_agent.persistence.files import SqlFileRepository
+from sd_agent.persistence.outbox import SqlOutboxRepository
 from sd_agent.persistence.sessions import SqlSessionStore
 from sd_agent.persistence.submissions import SqlSubmissionPersistence
 from sd_agent.submission import SubmissionService
@@ -33,9 +36,15 @@ class RuntimeResources:
     submission: SubmissionService | None
     my_tasks: MyTasksService | None
     files: FileService | None
+    outbox: OutboxProcessor | None
 
     @classmethod
-    def create(cls, settings: Settings) -> RuntimeResources:
+    def create(
+        cls,
+        settings: Settings,
+        *,
+        outbox_handlers: Mapping[str, OutboxHandler] | None = None,
+    ) -> RuntimeResources:
         database_url = settings.SD_APP_DATABASE_URL.get_secret_value()
         engine = (
             create_async_engine(database_url, pool_pre_ping=True, pool_recycle=1800)
@@ -92,6 +101,17 @@ class RuntimeResources:
             if engine is not None and settings.FILE_SCAN_BASE_URL and settings.FILE_STORAGE_ROOT
             else None
         )
+        handlers = dict(outbox_handlers or {})
+        outbox = (
+            OutboxProcessor(
+                repository=SqlOutboxRepository(engine),
+                dispatcher=HandlerOutboxDispatcher(handlers),
+                max_attempts=settings.OUTBOX_MAX_ATTEMPTS,
+                lease_seconds=settings.OUTBOX_LEASE_SECONDS,
+            )
+            if engine is not None and handlers
+            else None
+        )
         return cls(
             settings=settings,
             engine=engine,
@@ -101,6 +121,7 @@ class RuntimeResources:
             submission=submission,
             my_tasks=my_tasks,
             files=files,
+            outbox=outbox,
         )
 
     async def close(self) -> None:

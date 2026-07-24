@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -28,6 +29,7 @@ class DispatchResult:
     status_code: int | None = None
     error_code: str | None = None
     redacted_error: str | None = None
+    retryable: bool = True
 
 
 class OutboxRepository(Protocol):
@@ -52,6 +54,27 @@ class OutboxRepository(Protocol):
 
 class OutboxDispatcher(Protocol):
     async def dispatch(self, item: OutboxItem) -> DispatchResult: ...
+
+
+OutboxHandler = Callable[[OutboxItem], Awaitable[DispatchResult]]
+
+
+class HandlerOutboxDispatcher:
+    """Route durable commands only to explicitly registered handlers."""
+
+    def __init__(self, handlers: Mapping[str, OutboxHandler]) -> None:
+        self._handlers = dict(handlers)
+
+    async def dispatch(self, item: OutboxItem) -> DispatchResult:
+        handler = self._handlers.get(item.kind)
+        if handler is None:
+            return DispatchResult(
+                success=False,
+                error_code="OUTBOX_KIND_UNSUPPORTED",
+                redacted_error=item.kind[:128],
+                retryable=False,
+            )
+        return await handler(item)
 
 
 class OutboxProcessor:
@@ -109,6 +132,8 @@ class OutboxProcessor:
     ) -> tuple[DispatchOutcome, datetime]:
         if result.success:
             return DispatchOutcome.SENT, now
+        if not result.retryable:
+            return DispatchOutcome.DEAD_LETTER, now
         if item.attempt >= self._max_attempts:
             return DispatchOutcome.DEAD_LETTER, now
         delay_seconds = min(30 * (2 ** (item.attempt - 1)), 3600)
