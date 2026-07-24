@@ -10,7 +10,14 @@ describe('workspace API contracts', () => {
     const user = {
       person: { person_id: 7, name: '张三', unit_id: 10 },
       roles: [{ role: 'domain_owner', scope_unit_id: 10 }],
-      can: { report: true, review: false, issue_report: false },
+      can: {
+        report: true,
+        review: false,
+        issue_report: false,
+        outbox_view: false,
+        outbox_replay_approve: false,
+        outbox_replay_execute: false,
+      },
       csrf_token: 'csrf',
     }
     const summary = {

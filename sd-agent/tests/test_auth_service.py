@@ -151,18 +151,60 @@ async def test_csrf_rotation_fails_if_session_disappears() -> None:
 @pytest.mark.parametrize(
     ("roles", "expected"),
     [
-        ((), {"report": False, "review": False, "issue_report": False}),
+        (
+            (),
+            {
+                "report": False,
+                "review": False,
+                "issue_report": False,
+                "outbox_view": False,
+                "outbox_replay_approve": False,
+                "outbox_replay_execute": False,
+            },
+        ),
         (
             (RoleScope("unit_coordinator", 1),),
-            {"report": True, "review": False, "issue_report": False},
+            {
+                "report": True,
+                "review": False,
+                "issue_report": False,
+                "outbox_view": False,
+                "outbox_replay_approve": False,
+                "outbox_replay_execute": False,
+            },
         ),
         (
             (RoleScope("leader", None),),
-            {"report": False, "review": False, "issue_report": True},
+            {
+                "report": False,
+                "review": False,
+                "issue_report": True,
+                "outbox_view": False,
+                "outbox_replay_approve": False,
+                "outbox_replay_execute": False,
+            },
         ),
         (
             (RoleScope("supervision_admin", None),),
-            {"report": True, "review": True, "issue_report": True},
+            {
+                "report": True,
+                "review": True,
+                "issue_report": True,
+                "outbox_view": True,
+                "outbox_replay_approve": True,
+                "outbox_replay_execute": False,
+            },
+        ),
+        (
+            (RoleScope("ops_admin", None),),
+            {
+                "report": False,
+                "review": False,
+                "issue_report": False,
+                "outbox_view": True,
+                "outbox_replay_approve": False,
+                "outbox_replay_execute": True,
+            },
         ),
     ],
 )

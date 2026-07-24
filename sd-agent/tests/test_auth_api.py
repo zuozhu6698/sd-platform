@@ -52,7 +52,14 @@ async def test_me_rotates_csrf_and_returns_dynamic_capabilities(
     assert response.status_code == 200
     data = response.json()["data"]
     assert data["person"] == {"person_id": 7, "name": "张三", "unit_id": 10}
-    assert data["can"] == {"report": True, "review": False, "issue_report": True}
+    assert data["can"] == {
+        "report": True,
+        "review": False,
+        "issue_report": True,
+        "outbox_view": False,
+        "outbox_replay_approve": False,
+        "outbox_replay_execute": False,
+    }
     assert data["csrf_token"]
     assert sessions.state is not None
     assert sessions.state.csrf_hash != "old"

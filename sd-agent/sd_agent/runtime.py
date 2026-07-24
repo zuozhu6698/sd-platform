@@ -18,8 +18,10 @@ from sd_agent.auth.service import AuthService
 from sd_agent.config import Environment, Settings
 from sd_agent.files import FileService
 from sd_agent.outbox import HandlerOutboxDispatcher, OutboxHandler, OutboxProcessor
+from sd_agent.outbox.admin import OutboxAdminService
 from sd_agent.persistence.files import SqlFileRepository
 from sd_agent.persistence.outbox import SqlOutboxRepository
+from sd_agent.persistence.outbox_admin import SqlOutboxAdminRepository
 from sd_agent.persistence.sessions import SqlSessionStore
 from sd_agent.persistence.submissions import SqlSubmissionPersistence
 from sd_agent.submission import SubmissionService
@@ -37,6 +39,7 @@ class RuntimeResources:
     my_tasks: MyTasksService | None
     files: FileService | None
     outbox: OutboxProcessor | None
+    outbox_admin: OutboxAdminService | None
 
     @classmethod
     def create(
@@ -112,6 +115,9 @@ class RuntimeResources:
             if engine is not None and handlers
             else None
         )
+        outbox_admin = (
+            OutboxAdminService(SqlOutboxAdminRepository(engine)) if engine is not None else None
+        )
         return cls(
             settings=settings,
             engine=engine,
@@ -122,6 +128,7 @@ class RuntimeResources:
             my_tasks=my_tasks,
             files=files,
             outbox=outbox,
+            outbox_admin=outbox_admin,
         )
 
     async def close(self) -> None:

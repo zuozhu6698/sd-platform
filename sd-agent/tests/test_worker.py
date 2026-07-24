@@ -94,9 +94,7 @@ async def test_worker_rejects_enabled_outbox_without_database(monkeypatch: Any) 
     )
 
     try:
-        await worker_main.run_worker(
-            Settings(_env_file=None, ENV="test", OUTBOX_ENABLED=True)
-        )
+        await worker_main.run_worker(Settings(_env_file=None, ENV="test", OUTBOX_ENABLED=True))
     except RuntimeError as exc:
         assert str(exc) == "OUTBOX_ENABLED requires database and registered handlers"
     else:

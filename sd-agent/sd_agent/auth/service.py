@@ -122,6 +122,9 @@ def capabilities(roles: tuple[RoleScope, ...]) -> dict[str, bool]:
         "report": bool(names & {"domain_owner", "unit_coordinator", "supervision_admin"}),
         "review": "supervision_admin" in names,
         "issue_report": bool(names & {"leader", "supervision_admin"}),
+        "outbox_view": bool(names & {"supervision_admin", "ops_admin"}),
+        "outbox_replay_approve": "supervision_admin" in names,
+        "outbox_replay_execute": "ops_admin" in names,
     }
 
 

@@ -97,10 +97,13 @@ work_calendar 独立提供工作日/节假日规则
 | job_run | job_run_id、job、scheduled_for UNIQUE、state、config_hash、counts、error_code | 调度证明与重跑 |
 | outbox_message | outbox_id、kind、dedup_key UNIQUE、payload、state、available_at、attempt_count | durable 外部动作 |
 | outbox_attempt | attempt_id、outbox_id、started/finished、result、status_code、redacted_error | 每次外呼证据 |
+| outbox_replay_approval | approval_id、outbox_id、审批/执行幂等键、approved/consumed_by/at、reason_hash | dead letter 双人审批与人工补发证据 |
 | report_version | report_id、period、audience、revision、content_md、state、approved/issued_by/at | 周/月报版本和签发 |
 | ai_run | ai_run_id、purpose、input_hash、source_ids、prompt_version、model、params、output、schema_valid、reviewed_by/result | AI 全链溯源 |
 
 `file_object` 只有 `scan_state=clean` 且 owner/task 绑定与本次命令一致时才可进入填报；扫描中、失败或隔离态均 fail closed。outbox payload 不存 OA 密码/token。敏感正文只保存必要引用或加密字段，并按数据分类设置保留期。
+
+同一 dead letter 同时只能有一条未消费补发审批。`supervision_admin` 审批后，必须由不同人员的 `ops_admin` 消费审批并把消息重置为 `retry`；历史 attempt 不删除，补发批次的重试计数从 0 重新开始。审批和执行均使用独立 UUID 幂等键，并与 `audit_event` 在同一事务提交。
 
 ## 5. 读写矩阵
 

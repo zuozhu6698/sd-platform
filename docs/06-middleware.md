@@ -48,6 +48,8 @@ LIMIT :batch;
 
 Outbox 消费由 `OUTBOX_ENABLED` 独立控制，与 `CRON_ENABLED` 分离。worker 只路由显式注册的 `kind`；未知类型不可重试并立即进入 dead letter，防止配置漂移造成无限重试。OA handler 和真实联调完成前必须保持 outbox 消费关闭。
 
+人工补发采用双人分权：督导管理员创建审批，异人的运维管理员执行。PostgreSQL 部分唯一索引保证每条 dead letter 同时只有一个有效审批；审批消费、消息重置和两条审计事件分别在对应事务内原子提交。管理列表不返回 payload 或 dedup_key，避免运维角色读取业务正文。
+
 ## 5. Redis
 
 - `redis-teable` 只加入 teable-cache；`redis-app` 只加入 app-cache，网络和密码均隔离。

@@ -20,6 +20,7 @@ async def meta(request: Request) -> dict[str, Any]:
             "features": {
                 "dev_login": settings.AUTH_DEV_LOGIN,
                 "scheduler": settings.CRON_ENABLED,
+                "outbox": settings.OUTBOX_ENABLED,
             },
         },
         "request_id": request.state.request_id,

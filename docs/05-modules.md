@@ -24,7 +24,7 @@
 
 ### B1 sd_app schema 与迁移
 
-- Alembic 建 `auth_session/file_object/submission_command/webhook_receipt/audit_event/job_run/outbox_message/outbox_attempt/report_version/ai_run`。
+- Alembic 建 `auth_session/file_object/submission_command/webhook_receipt/audit_event/job_run/outbox_message/outbox_attempt/outbox_replay_approval/report_version/ai_run`。
 - 验收：空库 upgrade、已有库重复 upgrade、downgrade/备份策略、权限越界测试。
 
 ### B2 Teable adapter 与领域建模
@@ -49,7 +49,7 @@
 
 ### B6 worker、scheduler 与 durable outbox
 
-- 已实现填报完成 outbox 入队、`SKIP LOCKED` claim、租约、指数退避、不可重试错误立即 dead letter、显式 handler 白名单和可优雅停止的 worker 消费循环；OA 暂停期间 `OUTBOX_ENABLED=false`，仍需 7 个计划任务、OA handler、人工补发与对账端点。
+- 已实现填报完成 outbox 入队、`SKIP LOCKED` claim、租约、指数退避、不可重试错误立即 dead letter、显式 handler 白名单、可优雅停止的 worker 消费循环，以及 dead letter 安全列表、督导审批/异人运维执行、幂等重放和事务审计；OA 暂停期间 `OUTBOX_ENABLED=false`，仍需 7 个计划任务、OA handler 和自动对账端点。
 - 验收：多 worker 竞争、进程崩溃、OA 超时结果未知、重复触发、Redis 下线不重发。
 
 ### B7 OA adapter
