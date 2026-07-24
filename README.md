@@ -9,7 +9,7 @@
 - 运行态：未部署。应用服务器已完成只读核验，但尚不满足目标 Compose 栈的直接部署前提；内部资产明细不进入 public 仓库。
 - 工程门禁：后端 Ruff/format/Mypy/334 tests（总覆盖率 93.79%，outbox 核心模块 100%）通过；前端 lint/typecheck/11 tests/build（被测模块四项覆盖率 100%）通过；文档链接与 secret shape 检查通过。
 - 核心底座：JWT/CSRF/重定向防护、PostgreSQL session 撤销、动态角色范围、本人任务、纯规则引擎、Teable 安全适配器、幂等填报 saga、文件类型/宏/扫描/隔离/原子存储/上传下载授权链路、durable outbox worker 和 dead letter 双人审批补发已实现；OA start/callback、OA 分发、真实扫描 sidecar 与 Teable/OA 联调仍以 POC 为准。
-- 远程证据：PR #4 合并后的 GitHub Actions run `30057971502` 中 docs/backend/frontend/images 四个 job 全绿；本分支新增能力仍须经独立 PR 门禁。
+- 远程证据：PR #5 及合并后 GitHub Actions run `30059161949` 中 docs/backend/frontend/images 四个 job 全绿；`main`=`30342d4`。
 - GitHub 治理：PR #1 经 docs/backend/frontend/images 四项 checks 全绿后 squash merge；`main` 已设为默认并启用严格保护规则。
 - 下一步：完成应用机容量/运行时决策；OA 按项目负责人要求暂缓，先推进其余闭环。
 
