@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     FILE_SCAN_BASE_URL: str = ""
     FILE_STORAGE_ROOT: str = ""
     FILE_MAX_MB: int = Field(default=20, ge=1, le=100)
+    OA_MODE: str = "disabled"
     CRON_ENABLED: bool = False
     OUTBOX_ENABLED: bool = False
     OUTBOX_BATCH_SIZE: int = Field(default=20, ge=1, le=100)
@@ -70,6 +71,14 @@ class Settings(BaseSettings):
         normalized = value.upper()
         if normalized not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
             raise ValueError("LOG_LEVEL 无效")
+        return normalized
+
+    @field_validator("OA_MODE")
+    @classmethod
+    def validate_oa_mode(cls, value: str) -> str:
+        normalized = value.lower()
+        if normalized not in {"disabled", "mock"}:
+            raise ValueError("OA_MODE 仅允许 disabled/mock；真实模式等待 EXT-03")
         return normalized
 
     @model_validator(mode="after")
@@ -112,6 +121,8 @@ class Settings(BaseSettings):
             raise ValueError("生产环境必须启用 COOKIE_SECURE")
         if self.FILE_SCAN_MODE != "required" or not self.FILE_SCAN_BASE_URL:
             raise ValueError("生产环境必须配置同步文件扫描服务")
+        if self.OA_MODE == "mock":
+            raise ValueError("生产环境禁止 OA mock")
         if not self.FILE_STORAGE_ROOT.startswith("/"):
             raise ValueError("生产环境必须配置绝对文件存储目录")
         return self
