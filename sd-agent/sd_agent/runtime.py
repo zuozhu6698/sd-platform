@@ -29,9 +29,11 @@ from sd_agent.persistence.files import SqlFileRepository
 from sd_agent.persistence.outbox import SqlOutboxRepository
 from sd_agent.persistence.outbox_admin import SqlOutboxAdminRepository
 from sd_agent.persistence.scheduler import SqlJobRunRepository
+from sd_agent.persistence.scheduler_admin import SqlSchedulerAdminRepository
 from sd_agent.persistence.sessions import SqlSessionStore
 from sd_agent.persistence.sso import SqlSsoPersistence
 from sd_agent.persistence.submissions import SqlSubmissionPersistence
+from sd_agent.scheduler.admin import SchedulerAdminService, SchedulerTriggerOutboxHandler
 from sd_agent.scheduler.catalog import JOB_SPECS, catalog_hash
 from sd_agent.scheduler.service import JobHandler, SchedulerService
 from sd_agent.sso import MockSsoProvider, SsoService
@@ -53,6 +55,7 @@ class RuntimeResources:
     outbox: OutboxProcessor | None
     outbox_admin: OutboxAdminService | None
     scheduler: SchedulerService | None
+    scheduler_admin: SchedulerAdminService | None
 
     @classmethod
     def create(
@@ -157,6 +160,22 @@ class RuntimeResources:
                     oa_gateway,
                     TeableUrgeReceiptStore(teable),
                 )
+        scheduler = (
+            SchedulerService(
+                SqlJobRunRepository(engine),
+                handlers=jobs,
+                config_hash=catalog_hash(),
+            )
+            if engine is not None and jobs
+            else None
+        )
+        scheduler_admin = (
+            SchedulerAdminService(SqlSchedulerAdminRepository(engine))
+            if engine is not None
+            else None
+        )
+        if scheduler is not None:
+            handlers["scheduler.run_job"] = SchedulerTriggerOutboxHandler(scheduler)
         outbox = (
             OutboxProcessor(
                 repository=SqlOutboxRepository(engine),
@@ -169,15 +188,6 @@ class RuntimeResources:
         )
         outbox_admin = (
             OutboxAdminService(SqlOutboxAdminRepository(engine)) if engine is not None else None
-        )
-        scheduler = (
-            SchedulerService(
-                SqlJobRunRepository(engine),
-                handlers=jobs,
-                config_hash=catalog_hash(),
-            )
-            if engine is not None and jobs
-            else None
         )
         return cls(
             settings=settings,
@@ -192,6 +202,7 @@ class RuntimeResources:
             outbox=outbox,
             outbox_admin=outbox_admin,
             scheduler=scheduler,
+            scheduler_admin=scheduler_admin,
         )
 
     async def close(self) -> None:

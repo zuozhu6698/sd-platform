@@ -161,6 +161,34 @@ class JobRun(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
+class JobTriggerRequest(Base):
+    __tablename__ = "job_trigger_request"
+    __table_args__ = (
+        UniqueConstraint("idempotency_key", name="uq_job_trigger_idempotency"),
+        UniqueConstraint("retry_of_job_run_id", name="uq_job_trigger_retry_run"),
+        UniqueConstraint("outbox_id", name="uq_job_trigger_outbox"),
+        Index("ix_job_trigger_created", "created_at"),
+        {"schema": "sd_app"},
+    )
+
+    trigger_id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    idempotency_key: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    job: Mapped[str] = mapped_column(String(64), nullable=False)
+    scheduled_for: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    retry_of_job_run_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("sd_app.job_run.job_run_id", ondelete="RESTRICT"),
+    )
+    requested_by: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    outbox_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("sd_app.outbox_message.outbox_id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class OutboxMessage(Base, TimestampMixin):
     __tablename__ = "outbox_message"
     __table_args__ = (

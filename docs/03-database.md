@@ -96,6 +96,7 @@ work_calendar 独立提供工作日/节假日规则
 | webhook_receipt | provider、event_id UNIQUE、received_at、payload_hash、state | Webhook 重放/幂等 |
 | audit_event | event_id、who、what、target、result、ip、request_id、created_at | 2 年不可通过 API 删除 |
 | job_run | job_run_id、job、scheduled_for UNIQUE、state、config_hash、counts、error_code | 调度证明与重跑 |
+| job_trigger_request | trigger_id、idempotency_key UNIQUE、payload_hash、job、scheduled_for、retry_of_job_run_id UNIQUE、requested_by、outbox_id UNIQUE | 手动触发/失败重跑请求与 durable command 关联 |
 | outbox_message | outbox_id、kind、dedup_key UNIQUE、payload、state、available_at、attempt_count | durable 外部动作 |
 | outbox_attempt | attempt_id、outbox_id、started/finished、result、status_code、redacted_error | 每次外呼证据 |
 | outbox_replay_approval | approval_id、outbox_id、审批/执行幂等键、approved/consumed_by/at、reason_hash | dead letter 双人审批与人工补发证据 |
@@ -107,6 +108,8 @@ work_calendar 独立提供工作日/节假日规则
 同一 dead letter 同时只能有一条未消费补发审批。`supervision_admin` 审批后，必须由不同人员的 `ops_admin` 消费审批并把消息重置为 `retry`；历史 attempt 不删除，补发批次的重试计数从 0 重新开始。审批和执行均使用独立 UUID 幂等键，并与 `audit_event` 在同一事务提交。
 
 `job_run` 的正确性边界是 PostgreSQL：执行前先申请由 `job + scheduled_for` 派生的事务级 advisory lock，再以 `(job, scheduled_for)` 唯一键插入 `running` 记录；竞争失败或唯一键冲突均按幂等跳过。完成时只允许把仍为 `running` 的同一 `job_run_id` 改为 `succeeded/failed`，外部异常正文不得写入，仅保存稳定 `error_code`。
+
+管理端手动触发不在 `sd-api` 内执行任务。API 以 UUID `Idempotency-Key` 申请事务级 advisory lock，在同一事务写入 `job_trigger_request`、`scheduler.run_job` outbox 和 `audit_event`；同 key 同 payload 返回原结果，同 key 不同 payload 返回 409。失败补跑必须显式引用同一 job 的 `failed job_run`，且每条失败记录只允许生成一个补跑请求；worker 消费命令后仍经统一 `SchedulerService` 申请新的计划槽和 `job_run`。
 
 ## 5. 读写矩阵
 

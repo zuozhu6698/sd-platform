@@ -18,6 +18,9 @@ REPLAY_MIGRATION = (
 SSO_MIGRATION = (
     Path(__file__).parents[1] / "migrations" / "versions" / "20260724_0004_sso_login_attempt.py"
 )
+JOB_TRIGGER_MIGRATION = (
+    Path(__file__).parents[1] / "migrations" / "versions" / "20260724_0005_job_trigger_request.py"
+)
 
 
 def test_baseline_migration_is_explicit_and_immutable() -> None:
@@ -86,3 +89,14 @@ def test_sso_migration_is_explicit_and_reversible() -> None:
     assert '"sso_login_attempt"' in source
     assert '"uq_sso_login_attempt_ticket_hash"' in source
     assert 'op.drop_table("sso_login_attempt", schema="sd_app")' in source
+
+
+def test_job_trigger_migration_is_explicit_and_reversible() -> None:
+    source = JOB_TRIGGER_MIGRATION.read_text(encoding="utf-8")
+    assert "Base.metadata" not in source
+    assert 'revision: str = "20260724_0005"' in source
+    assert 'down_revision: str | None = "20260724_0004"' in source
+    assert '"job_trigger_request"' in source
+    assert '"uq_job_trigger_idempotency"' in source
+    assert '"uq_job_trigger_retry_run"' in source
+    assert 'op.drop_table("job_trigger_request", schema="sd_app")' in source
