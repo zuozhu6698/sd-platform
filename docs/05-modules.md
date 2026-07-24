@@ -69,8 +69,9 @@
 ### B8 AI 流水线
 
 - 已实现 `ReviewResult/WeeklyDraft/UrgeText` 严格 Schema、提示与不可信数据分隔、输入体积边界、prompt version、来源 ID 白名单、周报 `[T{id}]` 精确对账、非法输出 fail closed、0.6 低置信度降级和 `ai_run` 成功/失败溯源。
+- 已实现 `ai_review` 业务 handler：完整 Teable 快照内关联未审读流水、事项、重点工作目标和最近四期历史；重复主键/缺关联/字段异常均 fail closed；单条模型失败计数后继续，成功结果携 `ai_run_id` 幂等写回 `progress_log`，标记只进入 `pending_confirmation`，不自动发送追问。
 - `LLM_MODE=mock` 仅在非生产环境显式启用保守确定性替身：审读不作风险判断、周报只输出带来源的事实占位，不能用其证明模型质量。生产拒绝 mock；真实 OpenAI-compatible adapter、模型评测和 GPU POC 保持 `pending-EXT-01`。
-- 尚未完成 `ai_review/weekly_report/monthly_report` handler、Teable 结果写回、人工追问确认/回复/申诉和报告版本/签发 API；本批不把核心组件写成“业务闭环完成”。
+- 尚未完成人工追问确认/回复/申诉、`weekly_report/monthly_report` handler 和报告版本/签发 API；`ai_review` 也要等全部 7 类 handler 齐备后才进入运行时注册。本批不把审读任务写成“人工闭环完成”。
 - 验收：非法 JSON、提示注入、虚构来源、超时、模型切换；评测门槛见 docs/09。
 
 ### B9 报告、审计与指标

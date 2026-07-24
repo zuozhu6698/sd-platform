@@ -8,6 +8,7 @@ from sd_agent.ai.service import (
     LlmProvider,
     LlmRequest,
     ProgressFact,
+    ReviewExecution,
     ReviewInput,
     WeeklyFacts,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "LlmRequest",
     "ProgressFact",
     "ReviewFlag",
+    "ReviewExecution",
     "ReviewInput",
     "ReviewResult",
     "UrgeText",

@@ -1,7 +1,7 @@
 # 00 项目状态与事实矩阵
 
 更新日期：2026-07-24
-状态：`WAVE_1_IN_PROGRESS`，B6 调度管理已随 PR #13 远程验证；当前 B8 分支的严格 AI Schema、提示/数据隔离、来源白名单、低置信度降级、`ai_run` 溯源和保守离线替身已本地验证。AI 业务 handler、人工追问/报告闭环、其余四类 handler、全量运行时注册和 J0 未完成，`CRON_ENABLED/OUTBOX_ENABLED` 继续关闭，不允许进入部署。
+状态：`WAVE_1_IN_PROGRESS`，B8 AI 核心已随 PR #14 远程验证；当前分支的未审读流水快照、任务/重点工作/近四期历史关联、逐条安全降级和 AI 结果写回 handler 已本地验证。人工追问/回复/申诉、周月报 handler、其余三类 handler、全量运行时注册和 J0 未完成，`CRON_ENABLED/OUTBOX_ENABLED` 继续关闭，不允许进入部署。
 
 ## 1. 已确认事实
 
@@ -15,7 +15,7 @@
 | 服务器运行态 | 现状不满足目标 Compose 栈的直接部署前提，需运维完成容量与运行时决策 | pending |
 | GPU | 应用机不承担 32B 推理；GPU-SRV/统一模型接口尚未提供 | pending |
 | 原始资料 | 上级 DOCX/HTML 作为背景与原型证据保留 | verified-current |
-| 代码/测试/CI | PR #13 已经受保护主干合并，合并提交 `ce6b4b3` 四个 job 全绿；B8 AI 核心在分支完成本地门禁，待独立 PR | changed-and-verified |
+| 代码/测试/CI | PR #14 已经受保护主干合并，合并提交 `b42bef3` 四个 job 全绿；B8 审读任务在分支完成本地门禁，待独立 PR | changed-and-verified |
 | 部署/live | 未部署 | not-applicable |
 
 服务器地址、登录账户、口令、真实域名、OA 密钥不进入 Git 文档。口令曾通过对话传递，首次服务器操作前必须轮换并改用 SSH 密钥。
@@ -38,12 +38,12 @@ EXT-01/03/04/05/07 当前均不阻塞 Wave 1/2：按 `docs/12 §4b` 使用受控
 
 | 事实面 | 状态 | 证据/下一步 |
 |---|---|---|
-| 代码 | changed-and-verified | 当前分支后端 515 tests、96.56% 总覆盖率、AI schema/流水线/持久化与既有核心模块 100%；前端既有 11 tests、被测模块 100% 覆盖率并完成 production build |
+| 代码 | changed-and-verified | 当前分支后端 526 tests、96.68% 总覆盖率、AI schema/流水线/持久化/审读任务与既有核心模块 100%；前端既有 11 tests、被测模块 100% 覆盖率并完成 production build |
 | 运行态 | not-applicable | 尚未部署，不写“可用” |
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |
 | 记忆 | out-of-scope | 不直接修改宿主生成记忆 |
-| 工作区 | changed-and-verified | PR #13 四项 CI 全绿后 squash merge；`main`=`ce6b4b3` 且受保护；当前 B8 开发位于 `codex/b8-ai-review-pipeline` |
+| 工作区 | changed-and-verified | PR #14 四项 CI 全绿后 squash merge；`main`=`b42bef3` 且受保护；当前 B8 开发位于 `codex/b8-ai-review-job` |
 
 ## 4. Gate 定义
 
