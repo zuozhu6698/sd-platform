@@ -43,6 +43,25 @@ class AuthSession(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class SsoLoginAttempt(Base):
+    __tablename__ = "sso_login_attempt"
+    __table_args__ = (
+        UniqueConstraint("state_hash", name="uq_sso_login_attempt_state_hash"),
+        UniqueConstraint("ticket_hash", name="uq_sso_login_attempt_ticket_hash"),
+        Index("ix_sso_login_attempt_pending", "consumed_at", "expires_at"),
+        {"schema": "sd_app"},
+    )
+
+    attempt_id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    state_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    nonce_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    redirect_path: Mapped[str] = mapped_column(String(256), nullable=False)
+    ticket_hash: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class SubmissionCommand(Base, TimestampMixin):
     __tablename__ = "submission_command"
     __table_args__ = (

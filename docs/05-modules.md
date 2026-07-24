@@ -35,6 +35,8 @@
 ### B3 SSO、会话与 RBAC
 
 - OA start/callback、state/redirect、JWT kid、session revoke、5 分钟 authz cache、多角色/范围策略、CSRF。
+- Wave 1 已实现 SSO stub：站内 redirect 白名单、五分钟 state/nonce、一次性 ticket、防重放、active 人员校验、HttpOnly/Secure/SameSite Cookie、会话创建及成功/失败审计；生产环境强制拒绝 stub。
+- 真实 OA 授权地址、ticket 交换与人员字段映射保持 `pending-EXT-03`，stub 证据不得作为真实 OA 联调结论。
 - 验收：角色矩阵、ticket 重放、开放重定向、缓存失效、单会话撤销全部自动测试。
 
 ### B4 安全填报与文件

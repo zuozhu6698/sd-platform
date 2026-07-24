@@ -31,6 +31,7 @@ async def test_runtime_does_not_build_scheduler_without_database() -> None:
     )
     try:
         assert resources.scheduler is None
+        assert resources.sso is None
     finally:
         await resources.close()
 
@@ -56,3 +57,36 @@ def test_runtime_rejects_duplicate_mock_oa_registration() -> None:
             Settings(_env_file=None, ENV="test", OA_MODE="mock"),
             outbox_handlers={"oa.complete_pending": lambda _item: None},  # type: ignore[dict-item]
         )
+
+
+async def test_runtime_builds_sso_stub_only_with_required_local_dependencies() -> None:
+    resources = RuntimeResources.create(
+        Settings(
+            _env_file=None,
+            ENV="test",
+            SSO_MODE="stub",
+            SSO_STUB_PERSON_ID=9,
+            SD_APP_DATABASE_URL="postgresql+asyncpg://test:test@127.0.0.1/test",
+            TEABLE_BASE_URL="http://127.0.0.1:3000",
+            TEABLE_TOKEN="local-token",  # noqa: S106 -- 测试替身，不是凭据
+            TEABLE_TABLE_IDS={
+                name: f"tbl_{name}"
+                for name in (
+                    "org_unit",
+                    "person",
+                    "role_assignment",
+                    "key_work",
+                    "task",
+                    "task_owner",
+                    "progress_log",
+                    "urge_log",
+                    "work_calendar",
+                )
+            },
+            JWT_SECRET_V1="j" * 32,
+        )
+    )
+    try:
+        assert resources.sso is not None
+    finally:
+        await resources.close()

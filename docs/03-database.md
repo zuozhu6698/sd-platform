@@ -90,6 +90,7 @@ work_calendar 独立提供工作日/节假日规则
 | 表 | 关键字段/约束 | 用途 |
 |---|---|---|
 | auth_session | sid、person_id、kid、expires_at、revoked_at、last_seen_at | 单会话撤销/审计 |
+| sso_login_attempt | attempt_id、state_hash、nonce_hash、redirect_path、ticket_hash、expires_at、consumed_at | SSO 一次性 state/nonce/ticket、防重放；不保存原始票据 |
 | file_object | file_id、owner_person_id、task_id、storage_key、sha256、scan_state、scan_result | 附件元数据、对象级授权与扫描证据；二进制不入数据库 |
 | submission_command | command_id、idempotency_key UNIQUE、person_id、task_id、payload_hash、state、teable_record_id | 跨 Teable/PG saga 恢复 |
 | webhook_receipt | provider、event_id UNIQUE、received_at、payload_hash、state | Webhook 重放/幂等 |

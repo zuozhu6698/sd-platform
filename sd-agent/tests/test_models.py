@@ -7,6 +7,7 @@ def test_application_schema_contains_all_contract_tables() -> None:
     names = {(table.schema, table.name) for table in Base.metadata.tables.values()}
     assert names == {
         ("sd_app", "auth_session"),
+        ("sd_app", "sso_login_attempt"),
         ("sd_app", "submission_command"),
         ("sd_app", "webhook_receipt"),
         ("sd_app", "file_object"),

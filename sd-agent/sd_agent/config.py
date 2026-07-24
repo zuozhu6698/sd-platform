@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import Field, SecretStr, field_validator, model_validator
+from pydantic import Field, SecretStr, ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     JWT_SECRET_V1: SecretStr = SecretStr("")
     JWT_EXPIRE_MINUTES: int = Field(default=480, ge=5, le=1440)
     AUTH_DEV_LOGIN: bool = True
+    SSO_MODE: str = "disabled"
+    SSO_STUB_PERSON_ID: int = Field(default=7, gt=0)
     COOKIE_SECURE: bool = False
     CSRF_SECRET: SecretStr = SecretStr("")
     ALLOWED_REDIRECT_PATHS: tuple[str, ...] = (
@@ -73,12 +75,20 @@ class Settings(BaseSettings):
             raise ValueError("LOG_LEVEL 无效")
         return normalized
 
-    @field_validator("OA_MODE")
+    @field_validator("OA_MODE", "SSO_MODE")
     @classmethod
-    def validate_oa_mode(cls, value: str) -> str:
+    def validate_offline_mode(cls, value: str, info: ValidationInfo) -> str:
         normalized = value.lower()
-        if normalized not in {"disabled", "mock"}:
-            raise ValueError("OA_MODE 仅允许 disabled/mock；真实模式等待 EXT-03")
+        allowed = (
+            {"disabled", "mock"}
+            if info.field_name == "OA_MODE"
+            else {
+                "disabled",
+                "stub",
+            }
+        )
+        if normalized not in allowed:
+            raise ValueError("外部依赖模式无效；真实模式等待 EXT-03")
         return normalized
 
     @model_validator(mode="after")
@@ -117,6 +127,8 @@ class Settings(BaseSettings):
             raise ValueError("生产环境 TEABLE_TABLE_IDS 必须完整且有效")
         if self.AUTH_DEV_LOGIN:
             raise ValueError("生产环境禁止 AUTH_DEV_LOGIN")
+        if self.SSO_MODE == "stub":
+            raise ValueError("生产环境禁止 SSO stub")
         if not self.COOKIE_SECURE:
             raise ValueError("生产环境必须启用 COOKIE_SECURE")
         if self.FILE_SCAN_MODE != "required" or not self.FILE_SCAN_BASE_URL:

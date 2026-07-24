@@ -25,9 +25,11 @@ from sd_agent.persistence.outbox import SqlOutboxRepository
 from sd_agent.persistence.outbox_admin import SqlOutboxAdminRepository
 from sd_agent.persistence.scheduler import SqlJobRunRepository
 from sd_agent.persistence.sessions import SqlSessionStore
+from sd_agent.persistence.sso import SqlSsoPersistence
 from sd_agent.persistence.submissions import SqlSubmissionPersistence
 from sd_agent.scheduler.catalog import JOB_SPECS, catalog_hash
 from sd_agent.scheduler.service import JobHandler, SchedulerService
+from sd_agent.sso import MockSsoProvider, SsoService
 from sd_agent.submission import SubmissionService
 from sd_agent.tasks import MyTasksService
 
@@ -39,6 +41,7 @@ class RuntimeResources:
     http: httpx.AsyncClient
     teable: TeableClient | None
     auth: AuthService | None
+    sso: SsoService | None
     submission: SubmissionService | None
     my_tasks: MyTasksService | None
     files: FileService | None
@@ -85,18 +88,38 @@ class RuntimeResources:
         )
         jwt_secret = settings.JWT_SECRET_V1.get_secret_value()
         csrf_secret = settings.CSRF_SECRET.get_secret_value()
+        identities = TeableIdentityStore(teable) if teable is not None else None
+        tokens = (
+            TokenService(
+                active_kid=settings.JWT_ACTIVE_KID,
+                keys={"v1": jwt_secret},
+                expire_minutes=settings.JWT_EXPIRE_MINUTES,
+            )
+            if jwt_secret
+            else None
+        )
         auth = (
             AuthService(
-                tokens=TokenService(
-                    active_kid=settings.JWT_ACTIVE_KID,
-                    keys={"v1": jwt_secret},
-                    expire_minutes=settings.JWT_EXPIRE_MINUTES,
-                ),
+                tokens=tokens,
                 csrf=CsrfProtector(csrf_secret),
                 sessions=SqlSessionStore(engine),
-                identities=TeableIdentityStore(teable),
+                identities=identities,
             )
-            if engine is not None and teable is not None and jwt_secret and csrf_secret
+            if engine is not None and identities is not None and tokens is not None and csrf_secret
+            else None
+        )
+        sso = (
+            SsoService(
+                provider=MockSsoProvider(person_id=settings.SSO_STUB_PERSON_ID),
+                persistence=SqlSsoPersistence(engine),
+                identities=identities,
+                tokens=tokens,
+                allowed_redirect_paths=settings.ALLOWED_REDIRECT_PATHS,
+            )
+            if settings.SSO_MODE == "stub"
+            and engine is not None
+            and identities is not None
+            and tokens is not None
             else None
         )
         submission = (
@@ -149,6 +172,7 @@ class RuntimeResources:
             http=http,
             teable=teable,
             auth=auth,
+            sso=sso,
             submission=submission,
             my_tasks=my_tasks,
             files=files,
