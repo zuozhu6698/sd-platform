@@ -75,3 +75,13 @@ sd-platform/
 - 移动原生 App；一期只做 OA/M3 内嵌 H5。
 - Kubernetes、多节点微服务拆分、消息中间件集群。单应用机阶段使用 Compose + PostgreSQL durable outbox。
 - 在生产机 `git pull` 后现场构建。生产只接收 CI 生成并按 commit SHA/digest 标识的制品。
+
+## 8. Headless 工人与 07:50 汇报口径
+
+- 每个工人只领取一张任务卡，使用独立 `codex/*` 分支、worktree 和运行环境；任务卡完成后停在卡边界等待人工复核，不自动合并或领取新卡。
+- 工人必须由 headless 托管进程运行，显式加载 `~/.codex-worker.env`；不得依赖桌面窗口焦点或交互 shell 的代理状态。
+- 每个工作日 07:50 到达后，工人在当前任务安全点收尾并暂停，不再领取新卡。
+- 汇报只引用 `~/ci/worklog.py` 的确定性结果：同时报告“经过跨度”和“活动工时”，后者仅累计相邻事件间隔小于 5 分钟的区间。
+- 工时地面真值仅包括 `codex/*` 分支提交、CI 起止、`~/.codex/sessions/**/*.jsonl` 事件时间戳和证据文件 mtime；统一使用 `Asia/Shanghai`。
+- 完成/剩余任务卡分别以 `origin/main` 的任务 scope 和未合并 `codex/*` 分支为准；模型不得使用 `/goal`、墙钟或正文估算替代脚本数字。
+- 汇报必须列出昨晚完成、剩余任务卡、门禁命令及真实结果；未运行写“未运行”，禁止写“应该通过”。
