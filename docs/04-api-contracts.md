@@ -45,6 +45,9 @@
 | 16 | `/api/hooks/teable` | POST | webhook secret + 来源限制 + durable 幂等 |
 | 17 | `/healthz` | GET | 存活，仅进程状态 |
 | 18 | `/readyz` | GET | 就绪，PG/Teable 必需依赖；LLM/OA 为 degraded 字段 |
+| 19 | `/api/admin/outbox/dead-letters?cursor=&limit=` | GET | `ops_admin/supervision_admin`；只返回安全元数据，不返回 payload/dedup_key |
+| 20 | `/api/admin/outbox/{outbox_id}/replay-approvals` | POST | `supervision_admin`；审批原因、CSRF、幂等键与审计 |
+| 21 | `/api/admin/outbox/{outbox_id}/replay` | POST | 不同人员的 `ops_admin`；消费审批、CSRF、幂等键与审计 |
 
 ## 4. 关键 Schema
 
@@ -55,7 +58,14 @@
   "data": {
     "person": {"person_id": 5, "name": "张三", "unit_id": 10},
     "roles": [{"role": "domain_owner", "scope_unit_id": 10}],
-    "can": {"report": true, "review": false, "issue_report": false},
+    "can": {
+      "report": true,
+      "review": false,
+      "issue_report": false,
+      "outbox_view": false,
+      "outbox_replay_approve": false,
+      "outbox_replay_execute": false
+    },
     "csrf_token": "<memory-only>"
   },
   "request_id": "req_..."
@@ -131,6 +141,12 @@ Header：`Idempotency-Key: <uuid>`、`X-CSRF-Token: ...`
 
 每个 action 有明确状态机；重复决定返回既有结果或 409，禁止静默覆盖他人裁决。
 
+### 4.7 Dead letter 人工补发
+
+审批与执行是两个独立写请求，均要求 `Idempotency-Key: <uuid>` 和 `X-CSRF-Token`。审批原因 10–500 字；审批人与执行人必须是不同人员。执行成功只把消息置为 `retry`，不代表外部 OA 动作已经成功；最终结果仍以新的 `outbox_attempt` 为准。
+
+常见错误：`OUTBOX_FORBIDDEN` 403、`OUTBOX_TWO_PERSON_REQUIRED` 403、`OUTBOX_NOT_FOUND` 404、`OUTBOX_ALREADY_APPROVED` 409、`OUTBOX_APPROVAL_CONSUMED` 409、`IDEMPOTENCY_CONFLICT` 409。
+
 ## 5. Webhook
 
 - 若 Teable 支持 HMAC：签名覆盖原始 body + timestamp，允许时钟偏差 5 分钟。
@@ -164,4 +180,3 @@ Header：`Idempotency-Key: <uuid>`、`X-CSRF-Token: ...`
 ## 8. 兼容与变更
 
 API 初始版本为 `/api`，首个外部 consumer 稳定后升级为 `/api/v1`。任何破坏性变更必须先加新字段/端点，完成双写/consumer 迁移后再删除；同一 PR 更新后端 schema、前端类型、contract tests 和本文。
-

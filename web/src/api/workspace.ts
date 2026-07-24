@@ -3,7 +3,14 @@ import { apiClient, setCsrfToken } from './client'
 export interface CurrentUser {
   person: { person_id: number; name: string; unit_id: number }
   roles: Array<{ role: string; scope_unit_id: number | null }>
-  can: { report: boolean; review: boolean; issue_report: boolean }
+  can: {
+    report: boolean
+    review: boolean
+    issue_report: boolean
+    outbox_view: boolean
+    outbox_replay_approve: boolean
+    outbox_replay_execute: boolean
+  }
   csrf_token: string
 }
 

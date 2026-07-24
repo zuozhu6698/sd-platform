@@ -14,6 +14,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -176,6 +177,43 @@ class OutboxAttempt(Base):
     result: Mapped[str] = mapped_column(String(32), nullable=False)
     status_code: Mapped[int | None] = mapped_column(Integer)
     redacted_error: Mapped[str | None] = mapped_column(String(512))
+
+
+class OutboxReplayApproval(Base):
+    __tablename__ = "outbox_replay_approval"
+    __table_args__ = (
+        UniqueConstraint(
+            "approval_idempotency_key",
+            name="uq_outbox_replay_approval_idempotency",
+        ),
+        UniqueConstraint(
+            "execution_idempotency_key",
+            name="uq_outbox_replay_execution_idempotency",
+        ),
+        Index(
+            "uq_outbox_active_replay_approval",
+            "outbox_id",
+            unique=True,
+            postgresql_where=text("consumed_at IS NULL"),
+        ),
+        {"schema": "sd_app"},
+    )
+
+    approval_id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True)
+    outbox_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("sd_app.outbox_message.outbox_id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    approval_idempotency_key: Mapped[str] = mapped_column(UUID(as_uuid=False), nullable=False)
+    reason: Mapped[str] = mapped_column(String(500), nullable=False)
+    reason_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    approved_by: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    approved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed_by: Mapped[int | None] = mapped_column(BigInteger)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    execution_idempotency_key: Mapped[str | None] = mapped_column(UUID(as_uuid=False))
 
 
 class ReportVersion(Base):

@@ -117,16 +117,12 @@ async def test_worker_contains_repository_failure_and_retries_after_delay() -> N
 
     await worker.run(stop)
 
-    assert logger.events == [
-        ("outbox_batch_failed", {"error_type": "RuntimeError"})
-    ]
+    assert logger.events == [("outbox_batch_failed", {"error_type": "RuntimeError"})]
 
 
 async def test_worker_wait_is_interruptible_by_stop_event() -> None:
     stop = asyncio.Event()
-    processor = FakeProcessor(
-        [{"claimed": 0, "sent": 0, "retry": 0, "dead_letter": 0}]
-    )
+    processor = FakeProcessor([{"claimed": 0, "sent": 0, "retry": 0, "dead_letter": 0}])
     waits: list[float] = []
 
     async def wait_for_stop(seconds: float) -> None:

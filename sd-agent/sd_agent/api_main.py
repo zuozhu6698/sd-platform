@@ -10,6 +10,7 @@ from sd_agent.api.files import router as files_router
 from sd_agent.api.health import router as health_router
 from sd_agent.api.home import router as home_router
 from sd_agent.api.meta import router as meta_router
+from sd_agent.api.outbox_admin import router as outbox_admin_router
 from sd_agent.api.report import router as report_router
 from sd_agent.config import Settings
 from sd_agent.errors import install_error_handlers
@@ -45,6 +46,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(files_router)
     app.include_router(home_router)
     app.include_router(report_router)
+    app.include_router(outbox_admin_router)
     return app
 
 

@@ -9,6 +9,12 @@ MIGRATION = (
 FILE_MIGRATION = (
     Path(__file__).parents[1] / "migrations" / "versions" / "20260723_0002_file_object.py"
 )
+REPLAY_MIGRATION = (
+    Path(__file__).parents[1]
+    / "migrations"
+    / "versions"
+    / "20260724_0003_outbox_replay_approval.py"
+)
 
 
 def test_baseline_migration_is_explicit_and_immutable() -> None:
@@ -57,3 +63,13 @@ def test_file_migration_is_explicit_and_reversible() -> None:
     assert 'down_revision: str | None = "20260723_0001"' in source
     assert 'op.create_table(\n        "file_object"' in source
     assert 'op.drop_table("file_object", schema="sd_app")' in source
+
+
+def test_replay_approval_migration_is_explicit_and_reversible() -> None:
+    source = REPLAY_MIGRATION.read_text(encoding="utf-8")
+    assert "Base.metadata" not in source
+    assert 'revision: str = "20260724_0003"' in source
+    assert 'down_revision: str | None = "20260723_0002"' in source
+    assert '"outbox_replay_approval"' in source
+    assert 'postgresql_where=sa.text("consumed_at IS NULL")' in source
+    assert 'op.drop_table("outbox_replay_approval", schema="sd_app")' in source

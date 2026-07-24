@@ -104,4 +104,4 @@ async def test_meta_reports_effective_flags(client: httpx.AsyncClient) -> None:
     payload = response.json()["data"]
     assert payload["name"] == "sd-platform"
     assert payload["environment"] == "test"
-    assert payload["features"] == {"dev_login": True, "scheduler": False}
+    assert payload["features"] == {"dev_login": True, "scheduler": False, "outbox": False}

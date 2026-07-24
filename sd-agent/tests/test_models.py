@@ -14,6 +14,7 @@ def test_application_schema_contains_all_contract_tables() -> None:
         ("sd_app", "job_run"),
         ("sd_app", "outbox_message"),
         ("sd_app", "outbox_attempt"),
+        ("sd_app", "outbox_replay_approval"),
         ("sd_app", "report_version"),
         ("sd_app", "ai_run"),
         ("bi", "week_snapshot"),
@@ -23,5 +24,7 @@ def test_application_schema_contains_all_contract_tables() -> None:
 def test_append_only_tables_have_no_update_delete_cascade() -> None:
     audit = Base.metadata.tables["sd_app.audit_event"]
     attempts = Base.metadata.tables["sd_app.outbox_attempt"]
+    approvals = Base.metadata.tables["sd_app.outbox_replay_approval"]
     assert not audit.foreign_keys
     assert {fk.ondelete for fk in attempts.foreign_keys} == {"RESTRICT"}
+    assert {fk.ondelete for fk in approvals.foreign_keys} == {"RESTRICT"}
