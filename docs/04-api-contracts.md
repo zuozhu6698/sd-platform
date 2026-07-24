@@ -163,7 +163,7 @@ Header：`Idempotency-Key: <uuid>`、`X-CSRF-Token: ...`
 
 `get_token()`、`send_pending()`、`complete_pending()`、`send_message()`、`exchange_ticket()`。token/password 可能受既有 OA 接口限制出现在 URL，adapter 必须关闭 URL 级日志并对代理/APM 做脱敏。
 
-Wave 1 当前仅固化 `complete_pending(command_id, task_id, person_id, log_id, dedup_key)` 契约和 OA mock；mock 能复现同键冲突、429、5xx、业务拒绝及“服务端已接收但客户端超时”。真实接口认证和字段映射保持 `pending-EXT-03`，不得从 mock 推断厂商 contract。
+Wave 1 固化两类 durable OA 命令：`complete_pending(command_id, task_id, person_id, log_id, dedup_key)` 与 `send_urge(task_id, target_id, level, content, planned_at, dedup_key)`。OA mock 对两者均能复现同键冲突、429、5xx、业务拒绝及“服务端已接收但客户端超时”；催办成功后以同一 dedup key 幂等追加 `urge_log` 回执。真实接口认证、端点和字段映射保持 `pending-EXT-03`，不得从 mock 推断厂商 contract。
 
 ### TeableClient
 

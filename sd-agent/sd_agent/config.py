@@ -59,6 +59,11 @@ class Settings(BaseSettings):
     OUTBOX_POLL_SECONDS: float = Field(default=2.0, gt=0, le=60)
     OUTBOX_MAX_ATTEMPTS: int = Field(default=6, ge=1, le=20)
     OUTBOX_LEASE_SECONDS: int = Field(default=60, ge=5, le=600)
+    URGE_RULE_VERSION: str = Field(default="v1", min_length=1, max_length=32)
+    URGE_DUE_SOON_WORKDAYS: int = Field(default=5, ge=0, le=30)
+    URGE_ESCALATE_AFTER_WORKDAYS: int = Field(default=3, ge=1, le=30)
+    RECONCILIATION_STALE_MINUTES: int = Field(default=5, ge=1, le=60)
+    RECONCILIATION_BATCH_SIZE: int = Field(default=100, ge=1, le=500)
 
     @field_validator("ALLOWED_REDIRECT_PATHS", mode="before")
     @classmethod

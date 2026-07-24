@@ -17,7 +17,12 @@ from sd_agent.auth import CsrfProtector, TokenService
 from sd_agent.auth.service import AuthService
 from sd_agent.config import Environment, Settings
 from sd_agent.files import FileService
-from sd_agent.oa import MockOaGateway, OaOutboxHandler
+from sd_agent.oa import (
+    MockOaGateway,
+    OaOutboxHandler,
+    OaUrgeOutboxHandler,
+    TeableUrgeReceiptStore,
+)
 from sd_agent.outbox import HandlerOutboxDispatcher, OutboxHandler, OutboxProcessor
 from sd_agent.outbox.admin import OutboxAdminService
 from sd_agent.persistence.files import SqlFileRepository
@@ -63,8 +68,10 @@ class RuntimeResources:
             missing = sorted(required_jobs - set(jobs))
             unknown = sorted(set(jobs) - required_jobs)
             raise ValueError(f"job handler registry mismatch: missing={missing}, unknown={unknown}")
-        if settings.OA_MODE == "mock" and "oa.complete_pending" in (outbox_handlers or {}):
-            raise ValueError("duplicate oa.complete_pending handler")
+        offline_oa_kinds = {"oa.complete_pending", "oa.send_urge"}
+        duplicate_oa_kinds = offline_oa_kinds & set(outbox_handlers or {})
+        if settings.OA_MODE == "mock" and duplicate_oa_kinds:
+            raise ValueError(f"duplicate offline OA handlers: {sorted(duplicate_oa_kinds)}")
         database_url = settings.SD_APP_DATABASE_URL.get_secret_value()
         engine = (
             create_async_engine(database_url, pool_pre_ping=True, pool_recycle=1800)
@@ -143,7 +150,13 @@ class RuntimeResources:
         )
         handlers = dict(outbox_handlers or {})
         if settings.OA_MODE == "mock":
-            handlers["oa.complete_pending"] = OaOutboxHandler(MockOaGateway())
+            oa_gateway = MockOaGateway()
+            handlers["oa.complete_pending"] = OaOutboxHandler(oa_gateway)
+            if teable is not None:
+                handlers["oa.send_urge"] = OaUrgeOutboxHandler(
+                    oa_gateway,
+                    TeableUrgeReceiptStore(teable),
+                )
         outbox = (
             OutboxProcessor(
                 repository=SqlOutboxRepository(engine),

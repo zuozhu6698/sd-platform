@@ -74,3 +74,23 @@ def test_sso_mode_is_explicit_and_production_rejects_stub() -> None:
         Settings(_env_file=None, SSO_MODE="oa")
     with pytest.raises(ValidationError, match="SSO stub"):
         Settings(_env_file=None, **production_settings(SSO_MODE="stub"))
+
+
+def test_worker_rule_thresholds_are_bounded_and_explicit() -> None:
+    settings = Settings(_env_file=None)
+    assert (
+        settings.URGE_RULE_VERSION,
+        settings.URGE_DUE_SOON_WORKDAYS,
+        settings.URGE_ESCALATE_AFTER_WORKDAYS,
+        settings.RECONCILIATION_STALE_MINUTES,
+        settings.RECONCILIATION_BATCH_SIZE,
+    ) == ("v1", 5, 3, 5, 100)
+    for field, value in (
+        ("URGE_RULE_VERSION", ""),
+        ("URGE_DUE_SOON_WORKDAYS", 31),
+        ("URGE_ESCALATE_AFTER_WORKDAYS", 0),
+        ("RECONCILIATION_STALE_MINUTES", 0),
+        ("RECONCILIATION_BATCH_SIZE", 501),
+    ):
+        with pytest.raises(ValidationError):
+            Settings(_env_file=None, **{field: value})

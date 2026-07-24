@@ -51,11 +51,12 @@ async def test_runtime_registers_the_offline_oa_handler_only_when_explicit() -> 
         await resources.close()
 
 
-def test_runtime_rejects_duplicate_mock_oa_registration() -> None:
-    with pytest.raises(ValueError, match="duplicate oa.complete_pending"):
+@pytest.mark.parametrize("kind", ["oa.complete_pending", "oa.send_urge"])
+def test_runtime_rejects_duplicate_mock_oa_registration(kind: str) -> None:
+    with pytest.raises(ValueError, match="duplicate offline OA handlers"):
         RuntimeResources.create(
             Settings(_env_file=None, ENV="test", OA_MODE="mock"),
-            outbox_handlers={"oa.complete_pending": lambda _item: None},  # type: ignore[dict-item]
+            outbox_handlers={kind: lambda _item: None},  # type: ignore[dict-item]
         )
 
 

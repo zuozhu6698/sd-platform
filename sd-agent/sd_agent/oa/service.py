@@ -88,6 +88,17 @@ class MockOaGateway:
         *,
         dedup_key: str,
     ) -> OaGatewayResult:
+        return self._accept(command, dedup_key=dedup_key)
+
+    async def send_urge(
+        self,
+        command: BaseModel,
+        *,
+        dedup_key: str,
+    ) -> OaGatewayResult:
+        return self._accept(command, dedup_key=dedup_key)
+
+    def _accept(self, command: BaseModel, *, dedup_key: str) -> OaGatewayResult:
         payload_hash = _command_hash(command)
         existing = self._accepted.get(dedup_key)
         if existing is not None:
@@ -121,7 +132,7 @@ class MockOaGateway:
         return OaGatewayResult(True, 202, receipt_id=receipt_id, retryable=False)
 
 
-def _command_hash(command: CompletePendingCommand) -> str:
+def _command_hash(command: BaseModel) -> str:
     payload: dict[str, Any] = command.model_dump(mode="json")
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(encoded).hexdigest()

@@ -48,6 +48,10 @@ LIMIT :batch;
 
 Outbox 消费由 `OUTBOX_ENABLED` 独立控制，与 `CRON_ENABLED` 分离。worker 只路由显式注册的 `kind`；未知类型不可重试并立即进入 dead letter，防止配置漂移造成无限重试。OA handler 和真实联调完成前必须保持 outbox 消费关闭。
 
+Wave 1 离线模式的受控 kind 为 `oa.complete_pending` 和 `oa.send_urge`。催办先以规则版本、事项、目标人、业务日期和级别形成稳定 dedup key，在 PG 唯一入队；OA 返回 receipt 后再以相同 dedup key 幂等写 `urge_log`。若 OA 已接收但 Teable 回执写失败，重试必须先由 OA 同键收敛，再补写回执，不得换键重发。
+
+调度阈值配置：`URGE_DUE_SOON_WORKDAYS=5`、`URGE_ESCALATE_AFTER_WORKDAYS=3`、`RECONCILIATION_STALE_MINUTES=5`、`RECONCILIATION_BATCH_SIZE=100`、`URGE_RULE_VERSION=v1`。这是 Gate 3 离线固定数据集基线，正式启用前须关闭 OPEN-11。
+
 人工补发采用双人分权：督导管理员创建审批，异人的运维管理员执行。PostgreSQL 部分唯一索引保证每条 dead letter 同时只有一个有效审批；审批消费、消息重置和两条审计事件分别在对应事务内原子提交。管理列表不返回 payload 或 dedup_key，避免运维角色读取业务正文。
 
 ## 5. Redis

@@ -5,6 +5,12 @@ from sd_agent.oa.service import (
     OaGatewayResult,
     OaOutboxHandler,
 )
+from sd_agent.oa.urge import (
+    OaUrgeGateway,
+    OaUrgeOutboxHandler,
+    SendUrgeCommand,
+    TeableUrgeReceiptStore,
+)
 
 __all__ = [
     "CompletePendingCommand",
@@ -12,4 +18,8 @@ __all__ = [
     "OaGateway",
     "OaGatewayResult",
     "OaOutboxHandler",
+    "OaUrgeGateway",
+    "OaUrgeOutboxHandler",
+    "SendUrgeCommand",
+    "TeableUrgeReceiptStore",
 ]
