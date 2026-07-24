@@ -62,7 +62,15 @@ def test_redirect_paths_accept_comma_separated_env_shape() -> None:
 
 def test_oa_mode_is_explicit_and_production_rejects_mock() -> None:
     assert Settings(_env_file=None, OA_MODE="MOCK").OA_MODE == "mock"
-    with pytest.raises(ValidationError, match="OA_MODE"):
+    with pytest.raises(ValidationError, match="EXT-03"):
         Settings(_env_file=None, OA_MODE="http")
     with pytest.raises(ValidationError, match="生产环境禁止 OA mock"):
         Settings(_env_file=None, **production_settings(OA_MODE="mock"))
+
+
+def test_sso_mode_is_explicit_and_production_rejects_stub() -> None:
+    assert Settings(_env_file=None, SSO_MODE="STUB").SSO_MODE == "stub"
+    with pytest.raises(ValidationError, match="EXT-03"):
+        Settings(_env_file=None, SSO_MODE="oa")
+    with pytest.raises(ValidationError, match="SSO stub"):
+        Settings(_env_file=None, **production_settings(SSO_MODE="stub"))

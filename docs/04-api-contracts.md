@@ -17,11 +17,14 @@
 | 端点 | 方法 | 权限 | 说明 |
 |---|---|---|---|
 | `/api/sso/oa/start?redirect=/path` | GET | 公开 | 校验相对路径白名单，生成 state/nonce，跳 OA |
+| `/api/sso/stub/authorize?state=&nonce=` | GET | 仅非生产离线模式 | 生成一次性测试 ticket 并回跳 callback；生产配置强制拒绝 stub |
 | `/api/sso/oa/callback?ticket=&state=` | GET | 公开 | 校验 state、一次性 ticket、人员 active，创建 session，302 白名单路径 |
 | `/api/logout` | POST | 已登录 | 撤销当前 sid、清 Cookie、落审计 |
 | `/api/me` | GET | 已登录 | 当前人、有效角色/范围、能力位、CSRF token |
 
 `redirect` 只接受 `/` 开头的站内相对路径，禁止 scheme、host、`//`、编码绕过。JWT claims 仅含 `sub/sid/kid/iat/exp`。
+
+Wave 1 使用 `SSO_MODE=stub` 完成离线闭环：state/nonce 仅以 SHA-256 保存，state 五分钟过期，ticket 仅可交换一次；成功登录在同一事务创建 session 与审计，失败登录在同一事务使已存在的 state 失效并只记录错误码和 state 哈希前缀，不记录原始 state、nonce 或 ticket。生产环境拒绝 stub；真实 OA SSO URL、票据交换和字段映射保持 `pending-EXT-03`。
 
 ## 3. 端点清单
 

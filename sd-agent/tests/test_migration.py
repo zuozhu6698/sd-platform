@@ -15,6 +15,9 @@ REPLAY_MIGRATION = (
     / "versions"
     / "20260724_0003_outbox_replay_approval.py"
 )
+SSO_MIGRATION = (
+    Path(__file__).parents[1] / "migrations" / "versions" / "20260724_0004_sso_login_attempt.py"
+)
 
 
 def test_baseline_migration_is_explicit_and_immutable() -> None:
@@ -73,3 +76,13 @@ def test_replay_approval_migration_is_explicit_and_reversible() -> None:
     assert '"outbox_replay_approval"' in source
     assert 'postgresql_where=sa.text("consumed_at IS NULL")' in source
     assert 'op.drop_table("outbox_replay_approval", schema="sd_app")' in source
+
+
+def test_sso_migration_is_explicit_and_reversible() -> None:
+    source = SSO_MIGRATION.read_text(encoding="utf-8")
+    assert "Base.metadata" not in source
+    assert 'revision: str = "20260724_0004"' in source
+    assert 'down_revision: str | None = "20260724_0003"' in source
+    assert '"sso_login_attempt"' in source
+    assert '"uq_sso_login_attempt_ticket_hash"' in source
+    assert 'op.drop_table("sso_login_attempt", schema="sd_app")' in source

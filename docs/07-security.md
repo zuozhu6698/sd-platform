@@ -12,13 +12,13 @@
 
 ## 2. SSO 与会话
 
-- `/sso/start` 生成随机 state/nonce，绑定目标相对路径与短期 Cookie；callback 必须匹配。
+- `/api/sso/oa/start` 生成随机 state/nonce，绑定目标相对路径与 5 分钟 HttpOnly Cookie；callback 必须恒定时间匹配，成功后删除 Cookie。
 - redirect 仅允许配置中的站内相对路径，拒绝 scheme、host、`//`、反斜杠和双重编码。
 - OA ticket 只使用一次，保存 hash，不保存明文；重放返回 401 并审计。
 - JWT 仅含 `sub/sid/kid/iat/exp`；HttpOnly、Secure、SameSite=Lax。
 - 状态写请求要求 `X-CSRF-Token`，并校验 Origin/Referer 属于精确 allowlist。
 - `auth_session` 支持按 sid、用户、全部会话撤销；密钥用 kid 平滑轮换，不通过改全局密钥踢单人。
-- prod `AUTH_DEV_LOGIN=true` 或关键 secret 缺失时拒绝启动；生产路由表不注册开发登录端点。
+- prod `AUTH_DEV_LOGIN=true`、`SSO_MODE=stub` 或关键 secret 缺失时拒绝启动；stub 端点只在显式离线模式工作。
 
 ## 3. RBAC 与数据范围
 
@@ -84,4 +84,3 @@
 ## 10. 安全验收
 
 至少覆盖：IDOR、跨 scope、角色叠加、CSRF、CORS、XSS、开放重定向、ticket/webhook 重放、session 撤销、JWT kid 轮换、暴力请求、恶意附件、提示注入、日志泄密、依赖/镜像漏洞、PG/Redis 端口暴露、备份恢复权限。详细用例见 docs/09。
-

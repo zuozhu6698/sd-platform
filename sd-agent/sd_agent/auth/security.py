@@ -66,7 +66,7 @@ class TokenService:
                 options={
                     "require": ["sub", "sid", "kid", "iat", "exp"],
                     "verify_exp": False,
-                    "verify_iat": True,
+                    "verify_iat": False,
                 },
             )
         except AuthTokenError:
