@@ -8,6 +8,7 @@ import structlog
 from sd_agent.config import Settings
 from sd_agent.logging_config import configure_logging
 from sd_agent.runtime import RuntimeResources
+from sd_agent.worker.outbox import OutboxWorker
 
 logger = structlog.get_logger()
 
@@ -28,10 +29,28 @@ async def run_worker(settings: Settings | None = None) -> None:
         "worker_started",
         environment=active_settings.ENV.value,
         scheduler_enabled=active_settings.CRON_ENABLED,
+        outbox_enabled=active_settings.OUTBOX_ENABLED,
     )
+    outbox_task: asyncio.Task[None] | None = None
+    if active_settings.OUTBOX_ENABLED:
+        if resources.outbox is None:
+            await resources.close()
+            raise RuntimeError("OUTBOX_ENABLED requires database and registered handlers")
+        outbox_task = asyncio.create_task(
+            OutboxWorker(
+                processor=resources.outbox,
+                logger=logger,
+                batch_size=active_settings.OUTBOX_BATCH_SIZE,
+                poll_seconds=active_settings.OUTBOX_POLL_SECONDS,
+            ).run(stop),
+            name="outbox-worker",
+        )
     try:
         await stop.wait()
     finally:
+        if outbox_task is not None:
+            stop.set()
+            await outbox_task
         await resources.close()
         await logger.ainfo("worker_stopped")
 

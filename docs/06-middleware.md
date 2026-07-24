@@ -46,6 +46,8 @@ LIMIT :batch;
 
 领取、状态变化和 attempt 记录在一个 PG 事务内。worker 崩溃后由 lease 超时回收。dead letter 只能经带审计的管理接口重放。
 
+Outbox 消费由 `OUTBOX_ENABLED` 独立控制，与 `CRON_ENABLED` 分离。worker 只路由显式注册的 `kind`；未知类型不可重试并立即进入 dead letter，防止配置漂移造成无限重试。OA handler 和真实联调完成前必须保持 outbox 消费关闭。
+
 ## 5. Redis
 
 - `redis-teable` 只加入 teable-cache；`redis-app` 只加入 app-cache，网络和密码均隔离。

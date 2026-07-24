@@ -51,6 +51,11 @@ class Settings(BaseSettings):
     FILE_STORAGE_ROOT: str = ""
     FILE_MAX_MB: int = Field(default=20, ge=1, le=100)
     CRON_ENABLED: bool = False
+    OUTBOX_ENABLED: bool = False
+    OUTBOX_BATCH_SIZE: int = Field(default=20, ge=1, le=100)
+    OUTBOX_POLL_SECONDS: float = Field(default=2.0, gt=0, le=60)
+    OUTBOX_MAX_ATTEMPTS: int = Field(default=6, ge=1, le=20)
+    OUTBOX_LEASE_SECONDS: int = Field(default=60, ge=5, le=600)
 
     @field_validator("ALLOWED_REDIRECT_PATHS", mode="before")
     @classmethod

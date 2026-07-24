@@ -100,6 +100,19 @@ async def test_retry_backoff_is_deterministic(attempt: int, delay: int) -> None:
     assert repository.finished[0][3] == NOW + timedelta(seconds=delay)
 
 
+async def test_non_retryable_failure_is_dead_lettered_immediately() -> None:
+    repository = FakeRepository([item(1)])
+    dispatcher = FakeDispatcher(
+        [DispatchResult(False, error_code="INVALID_PAYLOAD", retryable=False)]
+    )
+    processor = OutboxProcessor(repository=repository, dispatcher=dispatcher)
+
+    counts = await processor.run_once(now=NOW)
+
+    assert counts == {"claimed": 1, "sent": 0, "retry": 0, "dead_letter": 1}
+    assert repository.finished[0][2:] == (DispatchOutcome.DEAD_LETTER, NOW)
+
+
 @pytest.mark.parametrize(
     "kwargs",
     [{"max_attempts": 0}, {"lease_seconds": 4}],
