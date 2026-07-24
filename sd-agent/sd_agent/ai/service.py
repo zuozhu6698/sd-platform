@@ -70,6 +70,12 @@ class AiRunRecord:
     created_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class ReviewExecution:
+    result: ReviewResult
+    ai_run_id: str
+
+
 class LlmProvider(Protocol):
     @property
     def model(self) -> str: ...
@@ -102,6 +108,9 @@ class AiPipelineService:
         self._confidence_threshold = confidence_threshold
 
     async def review(self, value: ReviewInput, *, now: datetime) -> ReviewResult:
+        return (await self.review_with_trace(value, now=now)).result
+
+    async def review_with_trace(self, value: ReviewInput, *, now: datetime) -> ReviewExecution:
         current_time = _require_utc(now)
         _validate_review_input(value)
         payload = _review_payload(value)
@@ -135,8 +144,8 @@ class AiPipelineService:
                 source_ids=result.source_ids,
             )
         output = result.model_dump(mode="json")
-        await self._record_valid(request, allowed_sources, output, current_time)
-        return result
+        ai_run_id = await self._record_valid(request, allowed_sources, output, current_time)
+        return ReviewExecution(result, ai_run_id)
 
     async def weekly_draft(self, value: WeeklyFacts, *, now: datetime) -> WeeklyDraft:
         current_time = _require_utc(now)
@@ -209,9 +218,9 @@ class AiPipelineService:
         sources: frozenset[str],
         output: dict[str, Any],
         now: datetime,
-    ) -> None:
+    ) -> str:
         run = _run(request, sources, output, True, now, self._provider.model)
-        await self._repository.record(run)
+        return await self._repository.record(run)
 
     async def _record_invalid(
         self,

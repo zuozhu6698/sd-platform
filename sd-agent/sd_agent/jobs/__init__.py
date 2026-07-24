@@ -1,3 +1,9 @@
+from sd_agent.jobs.ai_review import (
+    AiReviewHandler,
+    ReviewCandidate,
+    TeableReviewResultSink,
+    TeableReviewSource,
+)
 from sd_agent.jobs.urge import (
     SqlUrgeCommandSink,
     TeableUrgeSource,
@@ -9,10 +15,14 @@ from sd_agent.jobs.urge import (
 
 __all__ = [
     "ProgressRecovery",
+    "AiReviewHandler",
     "ReconciliationCandidate",
     "ReconciliationHandler",
     "SqlReconciliationRepository",
     "TeableReconciliationGateway",
+    "ReviewCandidate",
+    "TeableReviewResultSink",
+    "TeableReviewSource",
     "SqlUrgeCommandSink",
     "TeableUrgeSource",
     "UrgeCommand",
