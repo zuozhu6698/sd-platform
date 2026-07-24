@@ -111,6 +111,8 @@ work_calendar 独立提供工作日/节假日规则
 
 管理端手动触发不在 `sd-api` 内执行任务。API 以 UUID `Idempotency-Key` 申请事务级 advisory lock，在同一事务写入 `job_trigger_request`、`scheduler.run_job` outbox 和 `audit_event`；同 key 同 payload 返回原结果，同 key 不同 payload 返回 409。失败补跑必须显式引用同一 job 的 `failed job_run`，且每条失败记录只允许生成一个补跑请求；worker 消费命令后仍经统一 `SchedulerService` 申请新的计划槽和 `job_run`。
 
+`ai_run.input_hash` 只保存规范化输入 JSON 的 SHA-256；`source_ids` 是本次允许引用的白名单。Schema/来源校验成功才保存业务结构化 `output`；超时、非法 JSON、额外字段、HTML、控制字符或虚构来源只落 `schema_valid=false` 和 `output.error_code` 稳定错误码，不保存模型原始输出或异常正文。AI 结论不直接改变问责、豁免、追问发送或报告签发状态。
+
 ## 5. 读写矩阵
 
 | 主体 | 允许 | 禁止 |

@@ -68,6 +68,32 @@ async def test_runtime_wires_scheduler_admin_and_durable_trigger_handler() -> No
         await resources.close()
 
 
+async def test_runtime_builds_offline_ai_only_when_explicit() -> None:
+    disabled = RuntimeResources.create(
+        Settings(
+            _env_file=None,
+            ENV="test",
+            SD_APP_DATABASE_URL="postgresql+asyncpg://test:test@127.0.0.1/test",
+        )
+    )
+    mocked = RuntimeResources.create(
+        Settings(
+            _env_file=None,
+            ENV="test",
+            LLM_MODE="mock",
+            SD_APP_DATABASE_URL="postgresql+asyncpg://test:test@127.0.0.1/test",
+        )
+    )
+    try:
+        assert disabled.ai is None
+        assert mocked.ai is not None
+        assert (await disabled.readiness())[1]["llm"]["state"] == "pending"
+        assert (await mocked.readiness())[1]["llm"]["state"] == "mock"
+    finally:
+        await disabled.close()
+        await mocked.close()
+
+
 @pytest.mark.parametrize("kind", ["oa.complete_pending", "oa.send_urge"])
 def test_runtime_rejects_duplicate_mock_oa_registration(kind: str) -> None:
     with pytest.raises(ValueError, match="duplicate offline OA handlers"):

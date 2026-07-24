@@ -7,9 +7,9 @@
 - 工程文档：已完成 2026-07-23 架构/数据/安全/交付终审基线。
 - Git：已建立独立本地仓库和 `codex/g0-engineering-baseline` 分支；origin 已配置为 `zuozhu6698/sd-platform` 个人 public 仓库，可使用 GitHub Free 的 public 仓库分支保护。
 - 运行态：未部署。应用服务器已完成只读核验，但尚不满足目标 Compose 栈的直接部署前提；内部资产明细不进入 public 仓库。
-- 工程门禁：当前 B6 管理端分支后端 Ruff/format/Mypy/487 tests（总覆盖率 96.12%，SSO/rules/outbox/scheduler/OA/催办/对账/调度管理核心模块 100%）本地通过；前端既有 lint/typecheck/11 tests/build（被测模块四项覆盖率 100%）通过；文档链接与 secret shape 检查通过。
-- 核心底座：JWT/CSRF/重定向防护、PostgreSQL session 撤销、SSO stub、动态角色范围、本人任务、纯规则引擎、Teable 安全适配器、幂等填报 saga、文件安全链路、durable outbox、dead letter 双人审批、计划任务唯一运行框架、确定性催办、自动对账和 OA 离线替身/adapter 已实现；当前分支新增运行记录、幂等手动触发和失败补跑 durable command。其余五类业务 handler、全量运行时注册和真实 OA/扫描联调仍未完成。
-- 远程证据：PR #12 合并后的 GitHub Actions run `30066547081` 中 docs/backend/frontend/images 四个 job 全绿；`main`=`5a21e77`。当前管理端增量位于 `codex/b6-report-reminder-admin`，尚待独立 PR 门禁。
+- 工程门禁：当前 B8 分支后端 Ruff/format/Mypy/515 tests（总覆盖率 96.56%，AI schema/流水线/持久化及既有核心模块 100%）本地通过；前端既有 lint/typecheck/11 tests/build（被测模块四项覆盖率 100%）通过；文档链接与 secret shape 检查通过。
+- 核心底座：JWT/CSRF/重定向防护、SSO stub、动态权限、本人任务、安全填报、纯规则引擎、durable outbox、dead letter 双人审批、唯一调度、确定性催办、自动对账、调度管理和 OA 离线替身已实现；当前 B8 分支新增严格 AI Schema、提示/数据隔离、来源白名单、低置信度降级、`ai_run` 溯源和保守离线 LLM 替身。AI 业务 handler、人工追问/报告闭环、其余四类 handler、全量运行时注册和真实外部联调仍未完成。
+- 远程证据：PR #13 合并提交 `ce6b4b3` 的 GitHub Actions docs/backend/frontend/images 四个 job 全绿。当前 B8 增量位于 `codex/b8-ai-review-pipeline`，尚待独立 PR 门禁。
 - GitHub 治理：PR #1 经 docs/backend/frontend/images 四项 checks 全绿后 squash merge；`main` 已设为默认并启用严格保护规则。
 - 下一步：完成应用机容量/运行时决策；OA 按项目负责人要求暂缓，先推进其余闭环。
 

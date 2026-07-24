@@ -11,8 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from sd_agent.adapters.files import HttpFileScanner, LocalObjectStore
 from sd_agent.adapters.identity import TeableIdentityStore
+from sd_agent.adapters.llm import DeterministicLlmProvider
 from sd_agent.adapters.submission import TeableSubmissionGateway
 from sd_agent.adapters.teable import TeableClient
+from sd_agent.ai import AiPipelineService
 from sd_agent.auth import CsrfProtector, TokenService
 from sd_agent.auth.service import AuthService
 from sd_agent.config import Environment, Settings
@@ -25,6 +27,7 @@ from sd_agent.oa import (
 )
 from sd_agent.outbox import HandlerOutboxDispatcher, OutboxHandler, OutboxProcessor
 from sd_agent.outbox.admin import OutboxAdminService
+from sd_agent.persistence.ai import SqlAiRunRepository
 from sd_agent.persistence.files import SqlFileRepository
 from sd_agent.persistence.outbox import SqlOutboxRepository
 from sd_agent.persistence.outbox_admin import SqlOutboxAdminRepository
@@ -56,6 +59,7 @@ class RuntimeResources:
     outbox_admin: OutboxAdminService | None
     scheduler: SchedulerService | None
     scheduler_admin: SchedulerAdminService | None
+    ai: AiPipelineService | None
 
     @classmethod
     def create(
@@ -174,6 +178,15 @@ class RuntimeResources:
             if engine is not None
             else None
         )
+        ai = (
+            AiPipelineService(
+                provider=DeterministicLlmProvider(),
+                repository=SqlAiRunRepository(engine),
+                confidence_threshold=settings.AI_REVIEW_CONFIDENCE_THRESHOLD,
+            )
+            if engine is not None and settings.LLM_MODE == "mock"
+            else None
+        )
         if scheduler is not None:
             handlers["scheduler.run_job"] = SchedulerTriggerOutboxHandler(scheduler)
         outbox = (
@@ -203,6 +216,7 @@ class RuntimeResources:
             outbox_admin=outbox_admin,
             scheduler=scheduler,
             scheduler_admin=scheduler_admin,
+            ai=ai,
         )
 
     async def close(self) -> None:
@@ -218,7 +232,10 @@ class RuntimeResources:
             "postgres": postgres,
             "teable": teable,
             "oa": {"state": "pending", "required": False},
-            "llm": {"state": "pending", "required": False},
+            "llm": {
+                "state": "mock" if self.ai is not None else "pending",
+                "required": False,
+            },
         }
 
     async def _check_postgres(self) -> dict[str, Any]:

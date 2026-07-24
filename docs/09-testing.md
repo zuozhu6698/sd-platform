@@ -54,6 +54,8 @@ AI
       └─ injection/fake source/privacy attempt         [eval/security]
 ```
 
+当前离线门禁已覆盖非法/额外字段、通过/标记矛盾、HTML/控制字符、提示注入数据隔离、虚构/缺失/不一致来源、低置信度降级、provider timeout、安全失败落账、输入体积边界和确定性替身。真实模型 precision/recall、延迟与模型切换仍必须用 EXT-01 POC 和版本化评测集证明，mock 结果不得计入质量门槛。
+
 ## 3. 必测用户旅程
 
 1. OA 登录 → 本人任务 → H5 填报 → OA 已办 → 台账可见。

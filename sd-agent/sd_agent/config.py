@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     FILE_STORAGE_ROOT: str = ""
     FILE_MAX_MB: int = Field(default=20, ge=1, le=100)
     OA_MODE: str = "disabled"
+    LLM_MODE: str = "disabled"
+    LLM_BASE_URL: str = ""
+    LLM_API_KEY: SecretStr = SecretStr("")
+    LLM_MODEL: str = ""
+    LLM_TIMEOUT_S: int = Field(default=20, ge=1, le=120)
+    LLM_MAX_CONCURRENCY: int = Field(default=4, ge=1, le=16)
+    AI_REVIEW_CONFIDENCE_THRESHOLD: float = Field(default=0.6, ge=0, le=1)
     CRON_ENABLED: bool = False
     OUTBOX_ENABLED: bool = False
     OUTBOX_BATCH_SIZE: int = Field(default=20, ge=1, le=100)
@@ -80,20 +87,16 @@ class Settings(BaseSettings):
             raise ValueError("LOG_LEVEL 无效")
         return normalized
 
-    @field_validator("OA_MODE", "SSO_MODE")
+    @field_validator("OA_MODE", "SSO_MODE", "LLM_MODE")
     @classmethod
     def validate_offline_mode(cls, value: str, info: ValidationInfo) -> str:
         normalized = value.lower()
-        allowed = (
-            {"disabled", "mock"}
-            if info.field_name == "OA_MODE"
-            else {
-                "disabled",
-                "stub",
-            }
-        )
+        allowed = {"disabled", "mock"}
+        if info.field_name == "SSO_MODE":
+            allowed = {"disabled", "stub"}
         if normalized not in allowed:
-            raise ValueError("外部依赖模式无效；真实模式等待 EXT-03")
+            dependency = "EXT-01" if info.field_name == "LLM_MODE" else "EXT-03"
+            raise ValueError(f"外部依赖模式无效；真实模式等待 {dependency}")
         return normalized
 
     @model_validator(mode="after")
@@ -140,6 +143,8 @@ class Settings(BaseSettings):
             raise ValueError("生产环境必须配置同步文件扫描服务")
         if self.OA_MODE == "mock":
             raise ValueError("生产环境禁止 OA mock")
+        if self.LLM_MODE == "mock":
+            raise ValueError("生产环境禁止 LLM mock")
         if not self.FILE_STORAGE_ROOT.startswith("/"):
             raise ValueError("生产环境必须配置绝对文件存储目录")
         return self

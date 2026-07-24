@@ -76,6 +76,28 @@ def test_sso_mode_is_explicit_and_production_rejects_stub() -> None:
         Settings(_env_file=None, **production_settings(SSO_MODE="stub"))
 
 
+def test_llm_mode_is_explicit_and_production_rejects_mock() -> None:
+    settings = Settings(
+        _env_file=None,
+        LLM_MODE="MOCK",
+        LLM_TIMEOUT_S=30,
+        LLM_MAX_CONCURRENCY=2,
+        AI_REVIEW_CONFIDENCE_THRESHOLD=0.7,
+    )
+    assert settings.LLM_MODE == "mock"
+    assert (settings.LLM_TIMEOUT_S, settings.LLM_MAX_CONCURRENCY) == (30, 2)
+    assert settings.AI_REVIEW_CONFIDENCE_THRESHOLD == 0.7
+    with pytest.raises(ValidationError, match="EXT-01"):
+        Settings(_env_file=None, LLM_MODE="http")
+    with pytest.raises(ValidationError, match="生产环境禁止 LLM mock"):
+        Settings(_env_file=None, **production_settings(LLM_MODE="mock"))
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, AI_REVIEW_CONFIDENCE_THRESHOLD=1.1)
+    for field, value in (("LLM_TIMEOUT_S", 0), ("LLM_MAX_CONCURRENCY", 17)):
+        with pytest.raises(ValidationError):
+            Settings(_env_file=None, **{field: value})
+
+
 def test_worker_rule_thresholds_are_bounded_and_explicit() -> None:
     settings = Settings(_env_file=None)
     assert (
