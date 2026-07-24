@@ -10,7 +10,7 @@
 | GitHub owner/remote | `zuozhu6698` / `https://github.com/zuozhu6698/sd-platform.git` | verified-current |
 | 提交显示名 | `zuozhu6698` | verified-current |
 | 仓库 | 个人 public 仓库 `zuozhu6698/sd-platform` | verified-current |
-| GitHub 方案 | GitHub Free public 仓库；首次引导后启用 main 保护与 required checks | changed-not-yet-verified |
+| GitHub 方案 | `main` 为默认且受保护；PR、严格 required checks、管理员约束、线性历史、禁 force push/删除 | changed-and-verified-remote |
 | 应用服务器 | 已完成只读资产核验；详细清单不进入 public 仓库 | verified-current-local |
 | 服务器运行态 | 现状不满足目标 Compose 栈的直接部署前提，需运维完成容量与运行时决策 | pending |
 | GPU | 应用机不承担 32B 推理；GPU-SRV/统一模型接口尚未提供 | pending |
@@ -41,7 +41,7 @@
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |
 | 记忆 | out-of-scope | 不直接修改宿主生成记忆 |
-| 工作区 | changed-and-verified | 独立 Git 仓库；功能分支与 main 已推送；remote CI 全绿；GitHub 默认分支/保护规则仍待设置 |
+| 工作区 | changed-and-verified | PR #1 四项 CI 全绿后 squash merge；`main`=`d781cd2` 且受保护；后续开发位于 `codex/next-business-closure` |
 
 ## 4. Gate 定义
 
