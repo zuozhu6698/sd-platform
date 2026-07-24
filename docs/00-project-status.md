@@ -1,7 +1,7 @@
 # 00 项目状态与事实矩阵
 
 更新日期：2026-07-24
-状态：`WAVE_1_IN_PROGRESS`，工程基线、SSO stub、本人任务、规则引擎、幂等填报、安全附件、durable outbox、dead letter 双人审批、调度框架和 OA `complete_pending` 已远程验证；B6 分支的确定性催办计划、OA `send_urge`/`urge_log` 回执和填报崩溃自动对账组件已本地验证。其余五类业务 handler、全量运行时注册和 J0 未完成，`CRON_ENABLED/OUTBOX_ENABLED` 继续关闭，不允许进入部署。
+状态：`WAVE_1_IN_PROGRESS`，工程基线、SSO stub、本人任务、规则引擎、幂等填报、安全附件、durable outbox、dead letter 双人审批、调度框架、确定性催办、OA `complete_pending/send_urge` 回执和填报崩溃自动对账已远程验证；当前分支的运行记录、幂等手动触发与失败补跑 durable command 已本地验证。其余五类业务 handler、全量运行时注册和 J0 未完成，`CRON_ENABLED/OUTBOX_ENABLED` 继续关闭，不允许进入部署。
 
 ## 1. 已确认事实
 
@@ -15,7 +15,7 @@
 | 服务器运行态 | 现状不满足目标 Compose 栈的直接部署前提，需运维完成容量与运行时决策 | pending |
 | GPU | 应用机不承担 32B 推理；GPU-SRV/统一模型接口尚未提供 | pending |
 | 原始资料 | 上级 DOCX/HTML 作为背景与原型证据保留 | verified-current |
-| 代码/测试/CI | PR #11 已经受保护主干合并，合并后 GitHub Actions run `30065333652` 四个 job 全绿；B6 催办/对账子闭环在分支完成本地门禁，待独立 PR | changed-and-verified |
+| 代码/测试/CI | PR #12 已经受保护主干合并，合并后 GitHub Actions run `30066547081` 四个 job 全绿；B6 调度管理增量在分支完成本地门禁，待独立 PR | changed-and-verified |
 | 部署/live | 未部署 | not-applicable |
 
 服务器地址、登录账户、口令、真实域名、OA 密钥不进入 Git 文档。口令曾通过对话传递，首次服务器操作前必须轮换并改用 SSH 密钥。
@@ -38,12 +38,12 @@ EXT-01/03/04/05/07 当前均不阻塞 Wave 1/2：按 `docs/12 §4b` 使用受控
 
 | 事实面 | 状态 | 证据/下一步 |
 |---|---|---|
-| 代码 | changed-and-verified | B6 分支后端 462 tests、95.82% 总覆盖率、SSO/rules/outbox/scheduler/OA/催办/对账核心模块 100%；前端 11 tests、被测模块 100% 覆盖率并完成 production build |
+| 代码 | changed-and-verified | 当前分支后端 487 tests、96.12% 总覆盖率、SSO/rules/outbox/scheduler/OA/催办/对账/调度管理核心模块 100%；前端既有 11 tests、被测模块 100% 覆盖率并完成 production build |
 | 运行态 | not-applicable | 尚未部署，不写“可用” |
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |
 | 记忆 | out-of-scope | 不直接修改宿主生成记忆 |
-| 工作区 | changed-and-verified | PR #11 四项 CI 全绿后 squash merge；`main`=`d117172` 且受保护；B6 开发位于 `codex/b6-business-handlers` |
+| 工作区 | changed-and-verified | PR #12 四项 CI 全绿后 squash merge；`main`=`5a21e77` 且受保护；当前 B6 开发位于 `codex/b6-report-reminder-admin` |
 
 ## 4. Gate 定义
 

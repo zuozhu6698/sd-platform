@@ -40,6 +40,13 @@ OUTBOX
       ├─ max retry → dead letter + alert               [integration]
       └─ Redis down → still exactly-once effect        [degradation]
 
+SCHEDULER ADMIN
+ session → role + CSRF + idempotency → trigger_request + outbox + audit
+      ├─ same key/same payload → existing result       [integration]
+      ├─ same key/different payload → 409               [integration]
+      ├─ retry only matching failed run, once           [integration]
+      └─ worker → SchedulerService → job_run             [unit + integration]
+
 AI
  untrusted data → minimize/delimit → json_schema → Pydantic → ai_run
       ├─ valid + confident → suggestion                [unit + eval]

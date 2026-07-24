@@ -51,6 +51,23 @@ async def test_runtime_registers_the_offline_oa_handler_only_when_explicit() -> 
         await resources.close()
 
 
+async def test_runtime_wires_scheduler_admin_and_durable_trigger_handler() -> None:
+    resources = RuntimeResources.create(
+        Settings(
+            _env_file=None,
+            ENV="test",
+            SD_APP_DATABASE_URL="postgresql+asyncpg://test:test@127.0.0.1/test",
+        ),
+        job_handlers={spec.name: handler for spec in JOB_SPECS},
+    )
+    try:
+        assert resources.scheduler is not None
+        assert resources.scheduler_admin is not None
+        assert resources.outbox is not None
+    finally:
+        await resources.close()
+
+
 @pytest.mark.parametrize("kind", ["oa.complete_pending", "oa.send_urge"])
 def test_runtime_rejects_duplicate_mock_oa_registration(kind: str) -> None:
     with pytest.raises(ValueError, match="duplicate offline OA handlers"):
