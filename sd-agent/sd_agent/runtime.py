@@ -22,8 +22,11 @@ from sd_agent.outbox.admin import OutboxAdminService
 from sd_agent.persistence.files import SqlFileRepository
 from sd_agent.persistence.outbox import SqlOutboxRepository
 from sd_agent.persistence.outbox_admin import SqlOutboxAdminRepository
+from sd_agent.persistence.scheduler import SqlJobRunRepository
 from sd_agent.persistence.sessions import SqlSessionStore
 from sd_agent.persistence.submissions import SqlSubmissionPersistence
+from sd_agent.scheduler.catalog import JOB_SPECS, catalog_hash
+from sd_agent.scheduler.service import JobHandler, SchedulerService
 from sd_agent.submission import SubmissionService
 from sd_agent.tasks import MyTasksService
 
@@ -40,6 +43,7 @@ class RuntimeResources:
     files: FileService | None
     outbox: OutboxProcessor | None
     outbox_admin: OutboxAdminService | None
+    scheduler: SchedulerService | None
 
     @classmethod
     def create(
@@ -47,7 +51,14 @@ class RuntimeResources:
         settings: Settings,
         *,
         outbox_handlers: Mapping[str, OutboxHandler] | None = None,
+        job_handlers: Mapping[str, JobHandler] | None = None,
     ) -> RuntimeResources:
+        jobs = dict(job_handlers or {})
+        required_jobs = {spec.name for spec in JOB_SPECS}
+        if jobs and set(jobs) != required_jobs:
+            missing = sorted(required_jobs - set(jobs))
+            unknown = sorted(set(jobs) - required_jobs)
+            raise ValueError(f"job handler registry mismatch: missing={missing}, unknown={unknown}")
         database_url = settings.SD_APP_DATABASE_URL.get_secret_value()
         engine = (
             create_async_engine(database_url, pool_pre_ping=True, pool_recycle=1800)
@@ -118,6 +129,15 @@ class RuntimeResources:
         outbox_admin = (
             OutboxAdminService(SqlOutboxAdminRepository(engine)) if engine is not None else None
         )
+        scheduler = (
+            SchedulerService(
+                SqlJobRunRepository(engine),
+                handlers=jobs,
+                config_hash=catalog_hash(),
+            )
+            if engine is not None and jobs
+            else None
+        )
         return cls(
             settings=settings,
             engine=engine,
@@ -129,6 +149,7 @@ class RuntimeResources:
             files=files,
             outbox=outbox,
             outbox_admin=outbox_admin,
+            scheduler=scheduler,
         )
 
     async def close(self) -> None:

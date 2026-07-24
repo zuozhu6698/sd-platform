@@ -1,7 +1,7 @@
 # 00 项目状态与事实矩阵
 
 更新日期：2026-07-24
-状态：`CORE_FOUNDATIONS_IN_PROGRESS`，工程基线、会话鉴权端点、本人任务、规则引擎、Teable adapter、幂等填报 saga、安全附件链路、durable outbox worker、dead letter 双人审批与幂等补发已验证；SSO 回调、OA 分发和外部 POC 未完成，不允许生产部署。
+状态：`CORE_FOUNDATIONS_IN_PROGRESS`，工程基线、会话鉴权端点、本人任务、规则引擎、Teable adapter、幂等填报 saga、安全附件链路、durable outbox worker、dead letter 双人审批补发已远程验证；7 类计划任务目录、唯一运行证明和 worker 启停已在本地验证，业务 handlers、手动补跑、SSO 回调、OA 分发和外部 POC 未完成，不允许生产部署。
 
 ## 1. 已确认事实
 
@@ -15,7 +15,7 @@
 | 服务器运行态 | 现状不满足目标 Compose 栈的直接部署前提，需运维完成容量与运行时决策 | pending |
 | GPU | 应用机不承担 32B 推理；GPU-SRV/统一模型接口尚未提供 | pending |
 | 原始资料 | 上级 DOCX/HTML 作为背景与原型证据保留 | verified-current |
-| 代码/测试/CI | FastAPI/Vue/Alembic/Compose/CI 已创建；PR #5 已经受保护主干合并，合并后 GitHub Actions run `30059161949` 四个 job 全绿 | changed-and-verified-remote |
+| 代码/测试/CI | FastAPI/Vue/Alembic/Compose/CI 已创建；PR #6 已经受保护主干合并，合并后 GitHub Actions run `30059396830` 四个 job 全绿；scheduler runtime 待独立 PR 远程验证 | changed-and-verified |
 | 部署/live | 未部署 | not-applicable |
 
 服务器地址、登录账户、口令、真实域名、OA 密钥不进入 Git 文档。口令曾通过对话传递，首次服务器操作前必须轮换并改用 SSH 密钥。
@@ -36,12 +36,12 @@
 
 | 事实面 | 状态 | 证据/下一步 |
 |---|---|---|
-| 代码 | changed-and-verified | 后端 334 tests、93.79% 总覆盖率、outbox 核心模块 100%；前端 11 tests、被测模块 100% 覆盖率并完成 production build |
+| 代码 | changed-and-verified | 后端 361 tests、94.30% 总覆盖率、outbox/scheduler 核心模块 100%；前端 11 tests、被测模块 100% 覆盖率并完成 production build |
 | 运行态 | not-applicable | 尚未部署，不写“可用” |
 | 文档 | changed-and-verified | 本 docs 为现役工程契约 |
 | 规则 | changed-and-verified | 根、后端、前端 AGENTS 分层 |
 | 记忆 | out-of-scope | 不直接修改宿主生成记忆 |
-| 工作区 | changed-and-verified | PR #5 四项 CI 全绿后 squash merge；`main`=`30342d4` 且受保护；B6 补发能力已进入主干 |
+| 工作区 | changed-and-verified | PR #6 四项 CI 全绿后 squash merge；`main`=`172ad79` 且受保护；scheduler runtime 开发位于 `codex/b6-scheduler-runtime` |
 
 ## 4. Gate 定义
 

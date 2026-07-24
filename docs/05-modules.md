@@ -49,7 +49,9 @@
 
 ### B6 worker、scheduler 与 durable outbox
 
-- 已实现填报完成 outbox 入队、`SKIP LOCKED` claim、租约、指数退避、不可重试错误立即 dead letter、显式 handler 白名单、可优雅停止的 worker 消费循环，以及 dead letter 安全列表、督导审批/异人运维执行、幂等重放和事务审计；OA 暂停期间 `OUTBOX_ENABLED=false`，仍需 7 个计划任务、OA handler 和自动对账端点。
+- 已实现填报完成 outbox 入队、`SKIP LOCKED` claim、租约、指数退避、不可重试错误立即 dead letter、显式 handler 白名单、可优雅停止的 worker 消费循环，以及 dead letter 安全列表、督导审批/异人运维执行、幂等重放和事务审计。
+- 已实现 7 类任务目录、APScheduler worker、上海时区计划槽、15 分钟 misfire、`job_run(job, scheduled_for)` 唯一键、PostgreSQL advisory lock、配置哈希、成功/失败计数和脱敏错误落账。任务 handler 必须 7 项完整注册，否则 `CRON_ENABLED=true` 启动即失败；仍需各业务 handler、手动触发 API、失败补跑和自动对账端点。
+- 现行计划目录：每日 09:00 催办扫描；周五 12:00 催报；周五 12:30 AI 审读；周五 14:00 周报与周快照；每小时第 5 分钟对账；月末 18:00 月报。原设计只明确月报“月末”，18:00 是禁用态配置基线，启用前必须由业务负责人确认。OA 暂停期间 `OUTBOX_ENABLED=false`。
 - 验收：多 worker 竞争、进程崩溃、OA 超时结果未知、重复触发、Redis 下线不重发。
 
 ### B7 OA adapter

@@ -65,6 +65,8 @@ Outbox 消费由 `OUTBOX_ENABLED` 独立控制，与 `CRON_ENABLED` 分离。wor
 
 幂等、outbox、webhook receipt、job_run 不只存 Redis。
 
+计划任务仅由 `sd-worker` 启动。APScheduler 的 `max_instances=1` 和 coalesce 只减少本进程竞争，跨进程正确性仍由 PostgreSQL advisory lock 与 `job_run(job, scheduled_for)` 唯一键保证。所有计划槽使用 `Asia/Shanghai` 并持久化 `scheduled_for`；超过 15 分钟 misfire 窗口不伪造新批次。
+
 ## 6. Nginx 要求
 
 - 80 只做 308 跳 HTTPS；443 使用企业 CA 证书。

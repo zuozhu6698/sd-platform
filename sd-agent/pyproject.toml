@@ -66,5 +66,5 @@ strict = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["jwt.*"]
+module = ["apscheduler.*", "jwt.*"]
 ignore_missing_imports = true
