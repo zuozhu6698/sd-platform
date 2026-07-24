@@ -53,12 +53,15 @@
 
 - 已实现填报完成 outbox 入队、`SKIP LOCKED` claim、租约、指数退避、不可重试错误立即 dead letter、显式 handler 白名单、可优雅停止的 worker 消费循环，以及 dead letter 安全列表、督导审批/异人运维执行、幂等重放和事务审计。
 - 已实现 7 类任务目录、APScheduler worker、上海时区计划槽、15 分钟 misfire、`job_run(job, scheduled_for)` 唯一键、PostgreSQL advisory lock、配置哈希、成功/失败计数和脱敏错误落账。任务 handler 必须 7 项完整注册，否则 `CRON_ENABLED=true` 启动即失败；仍需各业务 handler、手动触发 API、失败补跑和自动对账端点。
+- B6 子闭环已实现：Teable 任务/唯一主责人/完整工作日日历快照，纯规则生成固定催办正文，PG `dedup_key` 唯一入 outbox 与事务审计，OA mock 幂等发送后追加 `urge_log`；填报 command 超过 5 分钟未收敛时按 `command_id` 对账，命令级 PG advisory lock 防并发，进度只前进不回退，恢复提交与 OA 完成命令同事务落账。
+- 离线验证阈值为临期 5 个工作日、逾期 3 个工作日升级、对账陈旧 5 分钟、单批 100；均有配置边界。它们尚待业务负责人确认，确认前仅用于 Gate 3 固定数据集，不得开启生产调度。
+- 当前尚未把 7 类 handler 全部注册到运行时；`report_reminder/ai_review/weekly_report/monthly_report/weekly_snapshot`、手动触发 API 和失败补跑仍待后续卡完成，因此 `CRON_ENABLED=false` 保持不变。
 - 现行计划目录：每日 09:00 催办扫描；周五 12:00 催报；周五 12:30 AI 审读；周五 14:00 周报与周快照；每小时第 5 分钟对账；月末 18:00 月报。原设计只明确月报“月末”，18:00 是禁用态配置基线，启用前必须由业务负责人确认。OA 暂停期间 `OUTBOX_ENABLED=false`。
 - 验收：多 worker 竞争、进程崩溃、OA 超时结果未知、重复触发、Redis 下线不重发。
 
 ### B7 OA adapter
 
-- Wave 1 已实现 `complete_pending` durable outbox handler、有状态 OA mock、同业务键去重/冲突、限流/服务故障/业务拒绝、已接收但客户端超时后同键收敛，以及 HTTPS HTTP adapter 骨架；`OA_MODE=mock` 必须显式开启且生产环境强制拒绝。
+- Wave 1 已实现 `complete_pending` 与 `send_urge` durable outbox handler、有状态 OA mock、同业务键去重/冲突、限流/服务故障/业务拒绝、已接收但客户端超时后同键收敛，以及 HTTPS HTTP adapter 骨架；`OA_MODE=mock` 必须显式开启且生产环境强制拒绝。
 - HTTP adapter 使用 header 凭据与幂等键，错误分类不复制响应正文、完整 URL 或凭据。真实致远 token、待办、已办、消息、SSO 字段映射和 TEST 10 用例保持 `pending-EXT-03`。
 - 验收：offline contract mock 已通过；OA TEST 报告尚未取得，不得宣称真实送达。
 

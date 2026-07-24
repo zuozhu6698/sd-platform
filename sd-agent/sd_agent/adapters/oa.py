@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import httpx
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr
 
 from sd_agent.oa.service import CompletePendingCommand, OaGatewayResult
 
@@ -31,13 +31,30 @@ class HttpOaGateway:
         *,
         dedup_key: str,
     ) -> OaGatewayResult:
+        return await self._post(command, path="/pending/complete", dedup_key=dedup_key)
+
+    async def send_urge(
+        self,
+        command: BaseModel,
+        *,
+        dedup_key: str,
+    ) -> OaGatewayResult:
+        return await self._post(command, path="/messages/urge", dedup_key=dedup_key)
+
+    async def _post(
+        self,
+        command: BaseModel,
+        *,
+        path: str,
+        dedup_key: str,
+    ) -> OaGatewayResult:
         headers = {
             "Authorization": f"Bearer {self._token.get_secret_value()}",
             "X-Idempotency-Key": dedup_key,
         }
         try:
             response = await self._http.post(
-                f"{self._base_url}/pending/complete",
+                f"{self._base_url}{path}",
                 headers=headers,
                 json=command.model_dump(mode="json"),
             )
